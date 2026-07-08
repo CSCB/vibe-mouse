@@ -1,0 +1,4 @@
+pynput==1.7.6
+pystray==0.19.5
+Pillow==10.2.0
+pyinstaller==6.4.0
