@@ -89,6 +89,7 @@ vibe-mouse/
 - `copilot`: Adaptation for GitHub Copilot (Ctrl+I, etc.)
 - `deveco_studio`: Adaptation for DevEco Studio CodeGenie (Alt+I Inline Chat, Alt+U Panel, Alt+Enter Accept)
 - `deveco_code`: Adaptation for DevEco Code CLI Agent (Tab Accept, Esc Dismiss)
+- `codearts`: Adaptation for Huawei Cloud CodeArts (Alt+C Multi-line, Alt+X Single-line, Tab Accept, Esc Dismiss)
 
 ### Usage
 
@@ -230,6 +231,7 @@ vibe-mouse/
 - `copilot`: 适配 GitHub Copilot (Ctrl+I 等)
 - `deveco_studio`: 适配 DevEco Studio CodeGenie (Alt+I 内联对话, Alt+U 面板, Alt+Enter 接受)
 - `deveco_code`: 适配 DevEco Code 终端 AI Agent (Tab 接受, Esc 关闭)
+- `codearts`: 适配华为云码道 CodeArts (Alt+C 多行续写, Alt+X 单行续写, Tab 接受, Esc 取消)
 
 ### 使用方法
 

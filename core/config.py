@@ -10,6 +10,7 @@ class VibeTool(Enum):
     COPILOT = "copilot"
     DEVECO_STUDIO = "deveco_studio"
     DEVECO_CODE = "deveco_code"
+    CODEARTS = "codearts"
 
 # 判断操作系统，自适应 Ctrl 或 Cmd
 # Detect OS to adaptively use Ctrl or Cmd
@@ -60,6 +61,15 @@ DEFAULT_SHORTCUTS = {
         "toggle_chat": ["esc"],                          # Esc 取消/退出当前会话 (Dismiss/Exit session)
         "accept_diff": ["tab"],                          # Tab 接受编辑 (Accept edit)
         "reject_diff": ["esc"],                          # Esc 拒绝编辑 (Reject edit)
+    },
+    # 华为云码道 (CodeArts) 代码智能体
+    # Huawei Cloud CodeArts Code Agent
+    # 参考文档: https://support.huaweicloud.com/usermanual-codeartssnap/codeartsdoer_ug_0007.html
+    VibeTool.CODEARTS.value: {
+        "inline_edit": ["alt", "c"],                     # 多行代码续写 (Win: Alt+C, Mac: Option+C)
+        "toggle_chat": ["alt", "x"],                     # 单行代码续写 (Win: Alt+X, Mac: Option+X)
+        "accept_diff": ["tab"],                          # 接受生成的代码 (Accept)
+        "reject_diff": ["esc"],                          # 取消生成的代码 (Dismiss)
     }
 }
 
