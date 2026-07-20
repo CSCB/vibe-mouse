@@ -20,6 +20,7 @@ from .bluetooth_adapter import BluetoothAdapter
 from .ir_adapter import IRAdapter
 from .hid_adapter import HIDAdapter
 from .network_adapter import NetworkAdapter
+from .voice_adapter import VoiceAdapter
 
 __all__ = [
     "BaseAdapter",
@@ -30,6 +31,7 @@ __all__ = [
     "IRAdapter",
     "HIDAdapter",
     "NetworkAdapter",
+    "VoiceAdapter",
 ]
 
 # 适配器注册表：device_type -> AdapterClass
@@ -41,6 +43,7 @@ ADAPTER_REGISTRY = {
     "ir_remote": IRAdapter,
     "hid_generic": HIDAdapter,
     "network": NetworkAdapter,
+    "voice": VoiceAdapter,
 }
 
 

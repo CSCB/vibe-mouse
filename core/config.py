@@ -23,42 +23,49 @@ DEFAULT_SHORTCUTS = {
         "toggle_chat": [CTRL_KEY, "i"],
         "accept_diff": [CTRL_KEY, "enter"],
         "reject_diff": ["esc"],
+        "voice_input": ["alt", "v"],
     },
     VibeTool.CURSOR.value: {
         "inline_edit": [CTRL_KEY, "k"],
         "toggle_chat": [CTRL_KEY, "l"],
-        "accept_diff": [CTRL_KEY, "enter"],
+        "accept_diff": [CTRL_KEY, "y"],
         "reject_diff": ["esc"],
+        "voice_input": [],
     },
     VibeTool.WINDSURF.value: {
         "inline_edit": [CTRL_KEY, "shift", "i"],
         "toggle_chat": [CTRL_KEY, "l"],
         "accept_diff": [CTRL_KEY, "enter"],
         "reject_diff": ["esc"],
+        "voice_input": ["alt", "a"],
     },
     VibeTool.COPILOT.value: {
         "inline_edit": [CTRL_KEY, "i"],
         "toggle_chat": [CTRL_KEY, "alt", "i"],
         "accept_diff": [CTRL_KEY, "enter"],
         "reject_diff": ["esc"],
+        "voice_input": ["alt", "a"],
     },
     VibeTool.DEVECO_STUDIO.value: {
         "inline_edit": ["alt", "i"],
         "toggle_chat": ["alt", "u"],
         "accept_diff": ["alt", "enter"],
         "reject_diff": ["esc"],
+        "voice_input": ["alt", "v"],
     },
     VibeTool.DEVECO_CODE.value: {
         "inline_edit": ["tab"],
         "toggle_chat": ["esc"],
         "accept_diff": ["tab"],
         "reject_diff": ["esc"],
+        "voice_input": [],
     },
     VibeTool.CODEARTS.value: {
         "inline_edit": ["alt", "c"],
         "toggle_chat": ["alt", "x"],
         "accept_diff": ["tab"],
         "reject_diff": ["esc"],
+        "voice_input": ["alt", "a"],
     }
 }
 

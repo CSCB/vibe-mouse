@@ -35,6 +35,21 @@
             "enabled": false
         },
         {
+            "id": "voice_cmd",
+            "type": "voice",
+            "config": {
+                "mode": "command",
+                "language": "zh-CN",
+                "command_phrases": {
+                    "accept_diff": ["接受", "采纳", "同意", "yes", "accept", "ok"],
+                    "reject_diff": ["拒绝", "取消", "不要", "no", "reject", "cancel"],
+                    "inline_edit": ["生成", "编辑", "写入", "generate", "edit"],
+                    "toggle_chat": ["面板", "聊天", "对话", "chat", "panel"]
+                }
+            },
+            "enabled": false
+        },
+        {
             "id": "tv_remote",
             "type": "ir_remote",
             "config": {

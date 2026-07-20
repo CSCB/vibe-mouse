@@ -20,6 +20,7 @@ class DeviceType(Enum):
     IR_REMOTE = "ir_remote"
     HID_GENERIC = "hid_generic"
     NETWORK = "network"
+    VOICE = "voice"
 
 
 class InputType(Enum):

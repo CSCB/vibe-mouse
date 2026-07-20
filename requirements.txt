@@ -28,3 +28,9 @@ pyinstaller==6.4.0
 # paho-mqtt
 # websockets
 # flask
+
+# 语音输入 / Voice input
+# SpeechRecognition
+# pyaudio
+# pocketsphinx    # 离线识别 (可选)
+# pvporcupine     # 唤醒词模式 (可选，需 access_key)

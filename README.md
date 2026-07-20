@@ -54,6 +54,7 @@ Device Event → Adapter → Event (unified) → DeviceManager → Executor (key
 | `core/adapters/ir_adapter.py` | IR remote — TV, AC (pyserial / broadlink / lirc) |
 | `core/adapters/hid_adapter.py` | Generic HID — Stream Deck, scanner (hidapi / pywinusb) |
 | `core/adapters/network_adapter.py` | IoT — MQTT / WebSocket / HTTP |
+| `core/adapters/voice_adapter.py` | Voice — wake words & voice commands |
 | `core/system_tray.py` | System tray menu |
 | `core/main.py` | Entry point |
 
@@ -75,7 +76,8 @@ vibe-mouse/
 │   │   ├── bluetooth_adapter.py
 │   │   ├── ir_adapter.py
 │   │   ├── hid_adapter.py
-│   │   └── network_adapter.py
+│   │   ├── network_adapter.py
+│   │   └── voice_adapter.py
 │   ├── main.py                    # Entry point
 │   └── system_tray.py             # System tray
 ├── actuator/                      # Open-source robot actuator module
@@ -116,15 +118,15 @@ vibe-mouse/
 
 ### Supported Tools
 
-| Tool | Inline Edit | Toggle Chat | Accept | Reject |
-|---|---|---|---|---|
-| `trae` | Ctrl+U | Ctrl+I | Ctrl+Enter | Esc |
-| `cursor` | Ctrl+K | Ctrl+L | Ctrl+Enter | Esc |
-| `windsurf` | Ctrl+Shift+I | Ctrl+L | Ctrl+Enter | Esc |
-| `copilot` | Ctrl+I | Ctrl+Alt+I | Ctrl+Enter | Esc |
-| `deveco_studio` | Alt+I | Alt+U | Alt+Enter | Esc |
-| `deveco_code` | Tab | Esc | Tab | Esc |
-| `codearts` | Alt+C | Alt+X | Tab | Esc |
+| Tool | Inline Edit | Toggle Chat | Accept | Reject | Voice Input |
+|---|---|---|---|---|---|
+| `trae` | Ctrl+U | Ctrl+I | Ctrl+Enter | Esc | Alt+V |
+| `cursor` | Ctrl+K | Ctrl+L | Ctrl+Y | Esc | - |
+| `windsurf` | Ctrl+Shift+I | Ctrl+L | Ctrl+Enter | Esc | Alt+A |
+| `copilot` | Ctrl+I | Ctrl+Alt+I | Ctrl+Enter | Esc | Alt+A |
+| `deveco_studio` | Alt+I | Alt+U | Alt+Enter | Esc | Alt+V |
+| `deveco_code` | Tab | Esc | Tab | Esc | - |
+| `codearts` | Alt+C | Alt+X | Tab | Esc | Alt+A |
 
 ### Supported Devices
 
@@ -137,6 +139,7 @@ vibe-mouse/
 | IR Remote | `ir_adapter.py` | pyserial / broadlink | TV remote, AC remote, learning remote |
 | HID Generic | `hid_adapter.py` | hidapi / pywinusb | Stream Deck, barcode scanner, presenter |
 | Network/IoT | `network_adapter.py` | paho-mqtt / websockets | Smart buttons, phone virtual controller |
+| Voice | `voice_adapter.py` | SpeechRecognition / pvporcupine / pyaudio | Voice commands, wake words |
 
 ### Configuration
 
@@ -254,6 +257,7 @@ Contributors are welcome to co-build China's first open-source robot actuator ec
 | `core/adapters/ir_adapter.py` | 红外遥控 — 电视、空调 (pyserial / broadlink / lirc) |
 | `core/adapters/hid_adapter.py` | 通用 HID — Stream Deck、扫描枪 (hidapi / pywinusb) |
 | `core/adapters/network_adapter.py` | IoT — MQTT / WebSocket / HTTP |
+| `core/adapters/voice_adapter.py` | 语音 — 唤醒词 & 语音命令 |
 | `core/system_tray.py` | 系统托盘菜单 |
 | `core/main.py` | 入口 |
 
@@ -275,7 +279,8 @@ vibe-mouse/
 │   │   ├── bluetooth_adapter.py
 │   │   ├── ir_adapter.py
 │   │   ├── hid_adapter.py
-│   │   └── network_adapter.py
+│   │   ├── network_adapter.py
+│   │   └── voice_adapter.py
 │   ├── main.py                    # 入口
 │   └── system_tray.py             # 系统托盘
 ├── actuator/                      # 开源机器人执行器模块
@@ -316,15 +321,15 @@ vibe-mouse/
 
 ### 支持工具
 
-| 工具 | 内联编辑 | 切换面板 | 接受 | 拒绝 |
-|---|---|---|---|---|
-| `trae` | Ctrl+U | Ctrl+I | Ctrl+Enter | Esc |
-| `cursor` | Ctrl+K | Ctrl+L | Ctrl+Enter | Esc |
-| `windsurf` | Ctrl+Shift+I | Ctrl+L | Ctrl+Enter | Esc |
-| `copilot` | Ctrl+I | Ctrl+Alt+I | Ctrl+Enter | Esc |
-| `deveco_studio` | Alt+I | Alt+U | Alt+Enter | Esc |
-| `deveco_code` | Tab | Esc | Tab | Esc |
-| `codearts` | Alt+C | Alt+X | Tab | Esc |
+| 工具 | 内联编辑 | 切换面板 | 接受 | 拒绝 | 语音输入 |
+|---|---|---|---|---|---|
+| `trae` | Ctrl+U | Ctrl+I | Ctrl+Enter | Esc | Alt+V |
+| `cursor` | Ctrl+K | Ctrl+L | Ctrl+Y | Esc | - |
+| `windsurf` | Ctrl+Shift+I | Ctrl+L | Ctrl+Enter | Esc | Alt+A |
+| `copilot` | Ctrl+I | Ctrl+Alt+I | Ctrl+Enter | Esc | Alt+A |
+| `deveco_studio` | Alt+I | Alt+U | Alt+Enter | Esc | Alt+V |
+| `deveco_code` | Tab | Esc | Tab | Esc | - |
+| `codearts` | Alt+C | Alt+X | Tab | Esc | Alt+A |
 
 ### 支持外设
 
@@ -337,6 +342,7 @@ vibe-mouse/
 | 红外遥控 | `ir_adapter.py` | pyserial / broadlink | 电视遥控器、空调遥控器、学习型遥控器 |
 | HID 通用 | `hid_adapter.py` | hidapi / pywinusb | Stream Deck、条码扫描枪、翻页笔 |
 | 网络/IoT | `network_adapter.py` | paho-mqtt / websockets | 智能家居按键、手机虚拟手柄 |
+| 语音输入 | `voice_adapter.py` | SpeechRecognition / pvporcupine / pyaudio | 语音命令、唤醒词 |
 
 ### 配置方式
 

@@ -123,10 +123,10 @@ table.mt input:focus,table.mt select:focus{outline:none;border-color:var(--accen
 <div class="toast" id="toast"></div>
 
 <script>
-const ACTIONS=["inline_edit","toggle_chat","accept_diff","reject_diff"];
-const A_LABELS={inline_edit:"Inline Edit / Generate",toggle_chat:"Toggle Chat / Panel",accept_diff:"Accept Code / Diff",reject_diff:"Reject Code / Dismiss"};
-const D_ICONS={mouse:"\u{1F5B1}",keyboard:"\u2328\uFE0F",gamepad:"\u{1F3AE}",bluetooth:"\u{1F4F6}",ir_remote:"\u{1F4FD}",hid_generic:"\u{1F50C}",network:"\u{1F5E1}\uFE0F"};
-const D_LABELS={mouse:"Mouse",keyboard:"Keyboard",gamepad:"Gamepad",bluetooth:"Bluetooth",ir_remote:"IR Remote",hid_generic:"HID Device",network:"Network/IoT"};
+const ACTIONS=["inline_edit","toggle_chat","accept_diff","reject_diff","voice_input"];
+const A_LABELS={inline_edit:"Inline Edit / Generate",toggle_chat:"Toggle Chat / Panel",accept_diff:"Accept Code / Diff",reject_diff:"Reject Code / Dismiss",voice_input:"Voice Input / 语音输入"};
+const D_ICONS={mouse:"\u{1F5B1}",keyboard:"\u2328\uFE0F",gamepad:"\u{1F3AE}",bluetooth:"\u{1F4F6}",ir_remote:"\u{1F4FD}",hid_generic:"\u{1F50C}",network:"\u{1F5E1}\uFE0F",voice:"\u{1F3A4}"};
+const D_LABELS={mouse:"Mouse",keyboard:"Keyboard",gamepad:"Gamepad",bluetooth:"Bluetooth",ir_remote:"IR Remote",hid_generic:"HID Device",network:"Network/IoT",voice:"Voice / Mic"};
 const D_TYPES=Object.keys(D_ICONS);
 
 // Default config
@@ -134,13 +134,13 @@ function defaults(){
   return {
     current_tool:"trae",
     shortcuts:{
-      trae:{inline_edit:["ctrl","u"],toggle_chat:["ctrl","i"],accept_diff:["ctrl","enter"],reject_diff:["esc"]},
-      cursor:{inline_edit:["ctrl","k"],toggle_chat:["ctrl","l"],accept_diff:["ctrl","enter"],reject_diff:["esc"]},
-      windsurf:{inline_edit:["ctrl","shift","i"],toggle_chat:["ctrl","l"],accept_diff:["ctrl","enter"],reject_diff:["esc"]},
-      copilot:{inline_edit:["ctrl","i"],toggle_chat:["ctrl","alt","i"],accept_diff:["ctrl","enter"],reject_diff:["esc"]},
-      deveco_studio:{inline_edit:["alt","i"],toggle_chat:["alt","u"],accept_diff:["alt","enter"],reject_diff:["esc"]},
-      deveco_code:{inline_edit:["tab"],toggle_chat:["esc"],accept_diff:["tab"],reject_diff:["esc"]},
-      codearts:{inline_edit:["alt","c"],toggle_chat:["alt","x"],accept_diff:["tab"],reject_diff:["esc"]}
+      trae:{inline_edit:["ctrl","u"],toggle_chat:["ctrl","i"],accept_diff:["ctrl","enter"],reject_diff:["esc"],voice_input:["alt","v"]},
+      cursor:{inline_edit:["ctrl","k"],toggle_chat:["ctrl","l"],accept_diff:["ctrl","y"],reject_diff:["esc"],voice_input:[]},
+      windsurf:{inline_edit:["ctrl","shift","i"],toggle_chat:["ctrl","l"],accept_diff:["ctrl","enter"],reject_diff:["esc"],voice_input:["alt","a"]},
+      copilot:{inline_edit:["ctrl","i"],toggle_chat:["ctrl","alt","i"],accept_diff:["ctrl","enter"],reject_diff:["esc"],voice_input:["alt","a"]},
+      deveco_studio:{inline_edit:["alt","i"],toggle_chat:["alt","u"],accept_diff:["alt","enter"],reject_diff:["esc"],voice_input:["alt","v"]},
+      deveco_code:{inline_edit:["tab"],toggle_chat:["esc"],accept_diff:["tab"],reject_diff:["esc"],voice_input:[]},
+      codearts:{inline_edit:["alt","c"],toggle_chat:["alt","x"],accept_diff:["tab"],reject_diff:["esc"],voice_input:["alt","a"]}
     },
     devices:[{id:"mouse_default",type:"mouse",config:{},enabled:true}],
     device_mappings:{mouse_default:{button8:"inline_edit",button9:"toggle_chat",middle:"accept_diff"}}
