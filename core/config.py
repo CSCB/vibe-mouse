@@ -13,109 +13,182 @@ class VibeTool(Enum):
     CODEARTS = "codearts"
 
 # 判断操作系统，自适应 Ctrl 或 Cmd
-# Detect OS to adaptively use Ctrl or Cmd
 IS_MAC = platform.system() == "Darwin"
 CTRL_KEY = "cmd" if IS_MAC else "ctrl"
 
-# 默认各个工具的快捷键配置 (自适应 Mac 和 Win)
-# Default shortcut configurations for each tool (Adaptive for Mac and Win)
+# 默认各个工具的快捷键配置
 DEFAULT_SHORTCUTS = {
     VibeTool.TRAE.value: {
-        "inline_edit": [CTRL_KEY, "u"],        # 唤起 Builder / Invoke Builder
-        "toggle_chat": [CTRL_KEY, "i"],        # 唤起 Chat / Invoke Chat
-        "accept_diff": [CTRL_KEY, "enter"],    # 接受代码 / Accept Code
-        "reject_diff": ["esc"],                # 拒绝代码 / Reject Code
+        "inline_edit": [CTRL_KEY, "u"],
+        "toggle_chat": [CTRL_KEY, "i"],
+        "accept_diff": [CTRL_KEY, "enter"],
+        "reject_diff": ["esc"],
     },
     VibeTool.CURSOR.value: {
-        "inline_edit": [CTRL_KEY, "k"],        # 唤起 Generate / Invoke Generate
-        "toggle_chat": [CTRL_KEY, "l"],        # 唤起 Chat / Invoke Chat
+        "inline_edit": [CTRL_KEY, "k"],
+        "toggle_chat": [CTRL_KEY, "l"],
         "accept_diff": [CTRL_KEY, "enter"],
         "reject_diff": ["esc"],
     },
     VibeTool.WINDSURF.value: {
-        "inline_edit": [CTRL_KEY, "shift", "i"], # 唤起 Cascade / Invoke Cascade
+        "inline_edit": [CTRL_KEY, "shift", "i"],
         "toggle_chat": [CTRL_KEY, "l"],
         "accept_diff": [CTRL_KEY, "enter"],
         "reject_diff": ["esc"],
     },
     VibeTool.COPILOT.value: {
-        "inline_edit": [CTRL_KEY, "i"],        # 唤起 Inline Chat / Invoke Inline Chat
-        "toggle_chat": [CTRL_KEY, "alt", "i"], # 唤起 Chat view / Invoke Chat view
+        "inline_edit": [CTRL_KEY, "i"],
+        "toggle_chat": [CTRL_KEY, "alt", "i"],
         "accept_diff": [CTRL_KEY, "enter"],
         "reject_diff": ["esc"],
     },
-    # DevEco Studio (HarmonyOS IDE, CodeGenie 内置 AI 助手)
-    # DevEco Studio (HarmonyOS IDE with built-in CodeGenie AI assistant)
-    # 参考文档: https://developer.huawei.com/consumer/cn/doc/harmonyos-guides/ide-edit-area-code-generation
     VibeTool.DEVECO_STUDIO.value: {
-        "inline_edit": ["alt", "i"],                     # Inline Chat (Win: Alt+I, Mac: Cmd+I 通过 Alt 映射)
-        "toggle_chat": ["alt", "u"],                     # CodeGenie 面板 (Win: Alt+U, Mac: Option+U)
-        "accept_diff": ["alt", "enter"],                 # Accept All (接受全部生成内容)
-        "reject_diff": ["esc"],                          # 拒绝 / 关闭 (Reject / Dismiss)
+        "inline_edit": ["alt", "i"],
+        "toggle_chat": ["alt", "u"],
+        "accept_diff": ["alt", "enter"],
+        "reject_diff": ["esc"],
     },
-    # DevEco Code (HarmonyOS 7 终端 AI Agent, 基于 OpenCode)
-    # DevEco Code (HarmonyOS 7 Terminal AI Agent, based on OpenCode)
-    # 参考: HDC 2026 发布, npm: @deveco-test/deveco-code
     VibeTool.DEVECO_CODE.value: {
-        "inline_edit": ["tab"],                          # Tab 接受代码补全 (Accept suggestion)
-        "toggle_chat": ["esc"],                          # Esc 取消/退出当前会话 (Dismiss/Exit session)
-        "accept_diff": ["tab"],                          # Tab 接受编辑 (Accept edit)
-        "reject_diff": ["esc"],                          # Esc 拒绝编辑 (Reject edit)
+        "inline_edit": ["tab"],
+        "toggle_chat": ["esc"],
+        "accept_diff": ["tab"],
+        "reject_diff": ["esc"],
     },
-    # 华为云码道 (CodeArts) 代码智能体
-    # Huawei Cloud CodeArts Code Agent
-    # 参考文档: https://support.huaweicloud.com/usermanual-codeartssnap/codeartsdoer_ug_0007.html
     VibeTool.CODEARTS.value: {
-        "inline_edit": ["alt", "c"],                     # 多行代码续写 (Win: Alt+C, Mac: Option+C)
-        "toggle_chat": ["alt", "x"],                     # 单行代码续写 (Win: Alt+X, Mac: Option+X)
-        "accept_diff": ["tab"],                          # 接受生成的代码 (Accept)
-        "reject_diff": ["esc"],                          # 取消生成的代码 (Dismiss)
+        "inline_edit": ["alt", "c"],
+        "toggle_chat": ["alt", "x"],
+        "accept_diff": ["tab"],
+        "reject_diff": ["esc"],
     }
 }
 
-# 默认鼠标按键映射
-# Default mouse button mapping
-# mouse_button -> action_name
-DEFAULT_MOUSE_MAPPING = {
-    "button8": "inline_edit",  # 鼠标侧键 1 (后退) / Mouse side button 1 (Backward)
-    "button9": "toggle_chat",  # 鼠标侧键 2 (前进) / Mouse side button 2 (Forward)
-    "middle": "accept_diff",   # 鼠标中键 / Mouse middle button
-    # 可以通过组合键扩展，例如 right_click + scroll 等
-    # Can be extended via key combinations, e.g., right_click + scroll, etc.
+# 默认设备列表
+DEFAULT_DEVICES = [
+    {
+        "id": "mouse_default",
+        "type": "mouse",
+        "config": {},
+        "enabled": True
+    }
+]
+
+# 默认设备映射：device_id -> {input_id -> action}
+DEFAULT_DEVICE_MAPPINGS = {
+    "mouse_default": {
+        "button8": "inline_edit",
+        "button9": "toggle_chat",
+        "middle": "accept_diff",
+    }
 }
 
 class Config:
     def __init__(self, config_file="config.json"):
         self.config_file = config_file
         self.current_tool = VibeTool.TRAE.value
-        self.shortcuts = DEFAULT_SHORTCUTS.copy()
-        self.mouse_mapping = DEFAULT_MOUSE_MAPPING.copy()
+        self.shortcuts = {}
+        self.devices = []
+        self.device_mappings = {}
         self.load_config()
 
     def load_config(self):
+        """加载配置，保持向后兼容"""
         if os.path.exists(self.config_file):
             try:
                 with open(self.config_file, "r", encoding="utf-8") as f:
                     data = json.load(f)
-                    self.current_tool = data.get("current_tool", self.current_tool)
-                    self.shortcuts.update(data.get("shortcuts", {}))
-                    self.mouse_mapping.update(data.get("mouse_mapping", {}))
             except Exception as e:
                 print(f"Error loading config / 加载配置失败: {e}")
+                data = {}
         else:
+            data = {}
+
+        # 工具快捷键（新旧兼容）
+        self.current_tool = data.get("current_tool", VibeTool.TRAE.value)
+        loaded_shortcuts = data.get("shortcuts", {})
+        # 合并默认值，确保新工具有默认配置
+        self.shortcuts = self._merge_defaults(DEFAULT_SHORTCUTS, loaded_shortcuts)
+
+        # 设备列表（新配置）
+        self.devices = data.get("devices", DEFAULT_DEVICES.copy())
+
+        # 设备映射（新配置，兼容旧的 mouse_mapping）
+        if "device_mappings" in data:
+            self.device_mappings = data["device_mappings"]
+        elif "mouse_mapping" in data:
+            # 向后兼容：将旧版 mouse_mapping 迁移到 device_mappings
+            self.device_mappings = {
+                "mouse_default": data["mouse_mapping"]
+            }
+        else:
+            self.device_mappings = DEFAULT_DEVICE_MAPPINGS.copy()
+
+        # 如果配置文件不存在或刚迁移，保存一次
+        if not os.path.exists(self.config_file) or "mouse_mapping" in data:
             self.save_config()
 
     def save_config(self):
         data = {
             "current_tool": self.current_tool,
             "shortcuts": self.shortcuts,
-            "mouse_mapping": self.mouse_mapping
+            "devices": self.devices,
+            "device_mappings": self.device_mappings,
         }
         with open(self.config_file, "w", encoding="utf-8") as f:
             json.dump(data, f, indent=4, ensure_ascii=False)
 
+    def _merge_defaults(self, defaults, loaded):
+        """合并默认配置和用户配置，确保新增工具有默认值"""
+        result = {}
+        for key, value in defaults.items():
+            if key in loaded:
+                result[key] = {**value, **loaded[key]}
+            else:
+                result[key] = value.copy()
+        # 保留用户自定义的工具
+        for key, value in loaded.items():
+            if key not in result:
+                result[key] = value
+        return result
+
     def get_current_shortcuts(self):
         return self.shortcuts.get(self.current_tool, {})
 
+    # ---------- 向后兼容方法 ----------
     def get_action_for_button(self, button_name):
-        return self.mouse_mapping.get(button_name)
+        """兼容旧版：从 mouse_default 映射中查找"""
+        mapping = self.device_mappings.get("mouse_default", {})
+        return mapping.get(button_name)
+
+    @property
+    def mouse_mapping(self):
+        """兼容旧版 listener.py"""
+        return self.device_mappings.get("mouse_default", {})
+
+    # ---------- 新多外设方法 ----------
+    def get_devices(self):
+        """获取所有启用的设备配置"""
+        return [d for d in self.devices if d.get("enabled", True)]
+
+    def get_device_mapping(self, device_id):
+        """获取指定设备的 input_id -> action 映射"""
+        return self.device_mappings.get(device_id, {})
+
+    def add_device(self, device_id, device_type, device_config=None, mapping=None):
+        """动态添加设备"""
+        if device_config is None:
+            device_config = {}
+        self.devices.append({
+            "id": device_id,
+            "type": device_type,
+            "config": device_config,
+            "enabled": True
+        })
+        if mapping:
+            self.device_mappings[device_id] = mapping
+        self.save_config()
+
+    def remove_device(self, device_id):
+        """移除设备"""
+        self.devices = [d for d in self.devices if d["id"] != device_id]
+        self.device_mappings.pop(device_id, None)
+        self.save_config()

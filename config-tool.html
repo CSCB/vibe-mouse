@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vibe Mouse Config Tool</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#0f1117;--surface:#1a1d27;--surface2:#242736;--border:#2e3142;
+  --text:#e4e6f0;--text2:#8b8fa3;--accent:#3b82f6;--accent2:#2563eb;
+  --green:#22c55e;--red:#ef4444;--yellow:#eab308;--radius:10px;
+}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+.header{background:var(--surface);border-bottom:1px solid var(--border);padding:16px 24px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px}
+.header h1{font-size:18px;font-weight:600;display:flex;align-items:center;gap:10px}
+.header h1 span{color:var(--accent)}
+.header-actions{display:flex;gap:8px}
+.container{display:grid;grid-template-columns:260px 1fr;gap:0;min-height:calc(100vh - 57px)}
+.sidebar{background:var(--surface);border-right:1px solid var(--border);padding:20px;overflow-y:auto}
+.sidebar h2{font-size:11px;text-transform:uppercase;letter-spacing:1.5px;color:var(--text2);margin-bottom:10px;margin-top:20px}
+.sidebar h2:first-child{margin-top:0}
+.tool-item{padding:9px 14px;border-radius:var(--radius);cursor:pointer;margin-bottom:3px;display:flex;align-items:center;justify-content:space-between;transition:all .12s;font-size:14px}
+.tool-item:hover{background:var(--surface2)}
+.tool-item.active{background:var(--accent);color:#fff}
+.tool-item .ck{font-size:11px;opacity:.7}
+.main{padding:24px;overflow-y:auto;max-height:calc(100vh - 57px)}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px;margin-bottom:20px}
+.card h3{font-size:14px;font-weight:600;margin-bottom:14px;display:flex;align-items:center;gap:8px}
+.badge{font-size:11px;background:var(--surface2);color:var(--text2);padding:2px 8px;border-radius:8px;font-weight:400}
+.dev-card{display:flex;align-items:center;gap:12px;padding:10px 14px;background:var(--surface2);border-radius:var(--radius);margin-bottom:6px}
+.dev-card .ico{width:36px;height:36px;border-radius:8px;background:var(--bg);display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0}
+.dev-card .info{flex:1;min-width:0}
+.dev-card .nm{font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dev-card .ds{font-size:11px;color:var(--text2);margin-top:1px}
+.toggle{position:relative;width:40px;height:22px;flex-shrink:0}
+.toggle input{opacity:0;width:0;height:0}
+.toggle .sl{position:absolute;inset:0;background:var(--border);border-radius:11px;cursor:pointer;transition:.2s}
+.toggle .sl:before{content:'';position:absolute;width:16px;height:16px;left:3px;bottom:3px;background:#fff;border-radius:50%;transition:.2s}
+.toggle input:checked+.sl{background:var(--green)}
+.toggle input:checked+.sl:before{transform:translateX(18px)}
+table.mt{width:100%;border-collapse:collapse;font-size:13px}
+table.mt th{text-align:left;padding:6px 10px;border-bottom:1px solid var(--border);color:var(--text2);font-weight:500;font-size:11px;text-transform:uppercase;letter-spacing:.5px}
+table.mt td{padding:5px 10px;border-bottom:1px solid var(--border)}
+table.mt input,table.mt select{background:var(--bg);border:1px solid var(--border);color:var(--text);padding:5px 8px;border-radius:6px;font-size:13px;width:100%}
+table.mt input:focus,table.mt select:focus{outline:none;border-color:var(--accent)}
+.btn{padding:7px 16px;border-radius:8px;border:none;font-size:13px;font-weight:500;cursor:pointer;transition:all .12s;display:inline-flex;align-items:center;gap:6px}
+.btn-p{background:var(--accent);color:#fff}.btn-p:hover{background:var(--accent2)}
+.btn-o{background:transparent;border:1px solid var(--border);color:var(--text)}.btn-o:hover{background:var(--surface2)}
+.btn-d{background:transparent;border:1px solid var(--red);color:var(--red)}.btn-d:hover{background:var(--red);color:#fff}
+.btn-s{padding:4px 10px;font-size:12px}
+.actions{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap}
+.toast{position:fixed;bottom:24px;right:24px;padding:10px 18px;border-radius:var(--radius);font-size:13px;z-index:999;transform:translateY(80px);opacity:0;transition:all .25s;pointer-events:none}
+.toast.show{transform:translateY(0);opacity:1}
+.toast.ok{background:var(--green);color:#000}
+.toast.err{background:var(--red);color:#fff}
+.type-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:14px}
+.type-btn{padding:10px 4px;border-radius:var(--radius);border:1px dashed var(--border);background:transparent;color:var(--text2);cursor:pointer;text-align:center;font-size:11px;transition:all .12s}
+.type-btn:hover{border-color:var(--accent);color:var(--text)}
+.type-btn .i{font-size:20px;display:block;margin-bottom:3px}
+.empty{text-align:center;padding:30px;color:var(--text2);font-size:13px}
+.cfg-json{width:100%;min-height:200px;background:var(--bg);border:1px solid var(--border);color:var(--text);padding:12px;border-radius:var(--radius);font-family:'Cascadia Code','Fira Code',monospace;font-size:12px;resize:vertical}
+.cfg-json:focus{outline:none;border-color:var(--accent)}
+@media(max-width:768px){.container{grid-template-columns:1fr}.sidebar{border-right:none;border-bottom:1px solid var(--border);max-height:40vh}}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1><span>V</span> Vibe Mouse Config Tool</h1>
+  <div class="header-actions">
+    <button class="btn btn-p" onclick="saveToFile()">&#128190; Save Config</button>
+    <button class="btn btn-o" onclick="document.getElementById('fileIn').click()">&#128194; Load Config</button>
+    <input type="file" id="fileIn" accept=".json" style="display:none" onchange="loadFromFile(event)">
+  </div>
+</div>
+
+<div class="container">
+  <div class="sidebar">
+    <h2>Current Tool</h2>
+    <div id="toolList"></div>
+    <h2>Actions</h2>
+    <button class="btn btn-o" style="width:100%;justify-content:center" onclick="resetDefaults()">&#8635; Reset Defaults</button>
+    <button class="btn btn-o" style="width:100%;justify-content:center;margin-top:4px" onclick="exportConfig()">&#128230; Export JSON</button>
+  </div>
+
+  <div class="main">
+    <!-- Devices -->
+    <div class="card">
+      <h3>&#128187; Devices <span class="badge" id="devCnt">0</span></h3>
+      <div id="devList"></div>
+      <div style="margin-top:14px">
+        <h3 style="margin-bottom:10px">&#10133; Add Device</h3>
+        <div class="type-grid" id="typeGrid"></div>
+        <div id="addForm" style="display:none;background:var(--surface2);padding:14px;border-radius:var(--radius)">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+            <div><label style="font-size:11px;color:var(--text2)">Device ID</label><input id="nId" placeholder="e.g. xbox_controller" style="width:100%;padding:6px 10px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:13px;margin-top:3px"></div>
+            <div><label style="font-size:11px;color:var(--text2)">Type</label><input id="nType" readonly style="width:100%;padding:6px 10px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text2);font-size:13px;margin-top:3px"></div>
+          </div>
+          <div class="actions"><button class="btn btn-p btn-s" onclick="doAdd()">Add</button><button class="btn btn-o btn-s" onclick="document.getElementById('addForm').style.display='none'">Cancel</button></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Mappings -->
+    <div class="card">
+      <h3>&#127919; Input Mappings</h3>
+      <div id="mapEditor"></div>
+    </div>
+
+    <!-- Raw JSON -->
+    <div class="card">
+      <h3>&#128221; Raw Config (JSON) <span class="badge">edit directly</span></h3>
+      <textarea class="cfg-json" id="rawJson" spellcheck="false"></textarea>
+      <div class="actions">
+        <button class="btn btn-p btn-s" onclick="applyRaw()">&#10003; Apply from JSON</button>
+        <button class="btn btn-o btn-s" onclick="refreshRaw()">&#8635; Refresh</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const ACTIONS=["inline_edit","toggle_chat","accept_diff","reject_diff"];
+const A_LABELS={inline_edit:"Inline Edit / Generate",toggle_chat:"Toggle Chat / Panel",accept_diff:"Accept Code / Diff",reject_diff:"Reject Code / Dismiss"};
+const D_ICONS={mouse:"\u{1F5B1}",keyboard:"\u2328\uFE0F",gamepad:"\u{1F3AE}",bluetooth:"\u{1F4F6}",ir_remote:"\u{1F4FD}",hid_generic:"\u{1F50C}",network:"\u{1F5E1}\uFE0F"};
+const D_LABELS={mouse:"Mouse",keyboard:"Keyboard",gamepad:"Gamepad",bluetooth:"Bluetooth",ir_remote:"IR Remote",hid_generic:"HID Device",network:"Network/IoT"};
+const D_TYPES=Object.keys(D_ICONS);
+
+// Default config
+function defaults(){
+  return {
+    current_tool:"trae",
+    shortcuts:{
+      trae:{inline_edit:["ctrl","u"],toggle_chat:["ctrl","i"],accept_diff:["ctrl","enter"],reject_diff:["esc"]},
+      cursor:{inline_edit:["ctrl","k"],toggle_chat:["ctrl","l"],accept_diff:["ctrl","enter"],reject_diff:["esc"]},
+      windsurf:{inline_edit:["ctrl","shift","i"],toggle_chat:["ctrl","l"],accept_diff:["ctrl","enter"],reject_diff:["esc"]},
+      copilot:{inline_edit:["ctrl","i"],toggle_chat:["ctrl","alt","i"],accept_diff:["ctrl","enter"],reject_diff:["esc"]},
+      deveco_studio:{inline_edit:["alt","i"],toggle_chat:["alt","u"],accept_diff:["alt","enter"],reject_diff:["esc"]},
+      deveco_code:{inline_edit:["tab"],toggle_chat:["esc"],accept_diff:["tab"],reject_diff:["esc"]},
+      codearts:{inline_edit:["alt","c"],toggle_chat:["alt","x"],accept_diff:["tab"],reject_diff:["esc"]}
+    },
+    devices:[{id:"mouse_default",type:"mouse",config:{},enabled:true}],
+    device_mappings:{mouse_default:{button8:"inline_edit",button9:"toggle_chat",middle:"accept_diff"}}
+  };
+}
+
+let cfg=defaults();
+
+// ---- Persistence (localStorage as primary, file download as export) ----
+function persist(){
+  localStorage.setItem("vibemouse_cfg",JSON.stringify(cfg));
+}
+function restore(){
+  try{const s=localStorage.getItem("vibemouse_cfg");if(s){cfg=JSON.parse(s);}}catch(e){}
+}
+
+// ---- Render ----
+function render(){
+  renderTools();
+  renderDevices();
+  renderMappings();
+  refreshRaw();
+}
+
+function renderTools(){
+  const el=document.getElementById("toolList");
+  el.innerHTML=Object.keys(cfg.shortcuts).map(t=>
+    `<div class="tool-item ${t===cfg.current_tool?'active':''}" onclick="cfg.current_tool='${t}';persist();render()">
+      <span>${t}</span><span class="ck">${t===cfg.current_tool?'\u2713':''}</span>
+    </div>`
+  ).join("");
+}
+
+function renderDevices(){
+  const devs=cfg.devices||[];
+  document.getElementById("devCnt").textContent=devs.filter(d=>d.enabled).length+'/'+devs.length;
+  document.getElementById("devList").innerHTML=devs.length?devs.map(d=>
+    `<div class="dev-card">
+      <div class="ico">${D_ICONS[d.type]||"?"}</div>
+      <div class="info"><div class="nm">${d.id}</div><div class="ds">${D_LABELS[d.type]||d.type} ${d.enabled?'':'(disabled)'}</div></div>
+      <label class="toggle"><input type="checkbox" ${d.enabled?'checked':''} onchange="toggleDev('${d.id}',this.checked)"><span class="sl"></span></label>
+      <button class="btn btn-d btn-s" onclick="rmDev('${d.id}')">\u{1F5D1}</button>
+    </div>`
+  ).join(""):'<div class="empty">No devices</div>';
+
+  document.getElementById("typeGrid").innerHTML=D_TYPES.map(t=>
+    `<div class="type-btn" onclick="showAdd('${t}')"><span class="i">${D_ICONS[t]}</span>${D_LABELS[t]}</div>`
+  ).join("");
+}
+
+function renderMappings(){
+  const devs=cfg.devices||[];
+  const mm=cfg.device_mappings||{};
+  const el=document.getElementById("mapEditor");
+  if(!devs.length){el.innerHTML='<div class="empty">Add devices first</div>';return;}
+  el.innerHTML=devs.map(d=>{
+    const m=mm[d.id]||{};
+    const entries=Object.entries(m);
+    return `<h4 style="font-size:12px;color:var(--text2);margin:12px 0 6px">${D_ICONS[d.type]||""} ${d.id}</h4>
+    ${entries.length?`<table class="mt"><tr><th>Input</th><th>Action</th><th></th></tr>
+    ${entries.map(([inp,act],i)=>`<tr>
+      <td><input value="${inp}" data-d="${d.id}" data-i="${i}" data-f="input" style="font-family:monospace;font-size:12px"></td>
+      <td><select data-d="${d.id}" data-i="${i}" data-f="action">${ACTIONS.map(a=>`<option value="${a}" ${a===act?'selected':''}>${A_LABELS[a]}</option>`).join("")}</select></td>
+      <td><button class="btn btn-d btn-s" style="padding:2px 6px" onclick="rmMap('${d.id}',${i})">\u2715</button></td>
+    </tr>`).join("")}</table>`:'<div style="font-size:12px;color:var(--text2);padding:6px 0">No mappings</div>'}
+    <button class="btn btn-o btn-s" style="margin-top:4px" onclick="addMapRow('${d.id}')">+ Add Mapping</button>`;
+  }).join("");
+}
+
+function refreshRaw(){
+  document.getElementById("rawJson").value=JSON.stringify(cfg,null,4);
+}
+
+// ---- Actions ----
+function toggleDev(id,on){
+  (cfg.devices||[]).forEach(d=>{if(d.id===id)d.enabled=on;});
+  persist();render();
+}
+function rmDev(id){
+  cfg.devices=(cfg.devices||[]).filter(d=>d.id!==id);
+  delete (cfg.device_mappings||{})[id];
+  persist();render();toast("Device removed","ok");
+}
+
+let _addType="";
+function showAdd(t){_addType=t;document.getElementById("nType").value=D_LABELS[t]+" ("+t+")";document.getElementById("nId").value=t+"_0";document.getElementById("addForm").style.display="block";}
+function doAdd(){
+  const id=document.getElementById("nId").value.trim();
+  if(!id){toast("Need Device ID","err");return;}
+  if((cfg.devices||[]).some(d=>d.id===id)){toast("ID exists","err");return;}
+  cfg.devices=cfg.devices||[];
+  cfg.devices.push({id,type:_addType,config:{},enabled:true});
+  cfg.device_mappings=cfg.device_mappings||{};
+  cfg.device_mappings[id]={};
+  document.getElementById("addForm").style.display='none';
+  persist();render();toast("Device added: "+id,"ok");
+}
+function addMapRow(did){
+  const m=cfg.device_mappings[did]||{};
+  const k="input_"+Object.keys(m).length;
+  m[k]="inline_edit";
+  cfg.device_mappings[did]=m;
+  persist();renderMappings();
+}
+function rmMap(did,idx){
+  const m=cfg.device_mappings[did]||{};
+  const ks=Object.keys(m);
+  if(idx<ks.length)delete m[ks[idx]];
+  persist();renderMappings();
+}
+
+function applyRaw(){
+  try{cfg=JSON.parse(document.getElementById("rawJson").value);persist();render();toast("Applied","ok");}
+  catch(e){toast("Invalid JSON","err");}
+}
+
+function resetDefaults(){if(!confirm("Reset to defaults?"))return;cfg=defaults();persist();render();toast("Reset","ok");}
+
+// ---- File I/O ----
+function saveToFile(){
+  const b=new Blob([JSON.stringify(cfg,null,4)],{type:"application/json"});
+  const a=document.createElement("a");a.href=URL.createObjectURL(b);a.download="config.json";a.click();
+  toast("config.json downloaded","ok");
+}
+function loadFromFile(e){
+  const f=e.target.files[0];if(!f)return;
+  const r=new FileReader();
+  r.onload=function(){try{cfg=JSON.parse(r.result);persist();render();toast("Loaded","ok");}catch(ex){toast("Invalid file","err");}};
+  r.readAsText(f);
+  e.target.value="";
+}
+function exportConfig(){saveToFile();}
+
+// ---- Toast ----
+function toast(m,t){
+  const el=document.getElementById("toast");el.textContent=m;el.className="toast "+t+" show";
+  setTimeout(()=>el.classList.remove("show"),2200);
+}
+
+// ---- Init ----
+restore();
+render();
+</script>
+</body>
+</html>

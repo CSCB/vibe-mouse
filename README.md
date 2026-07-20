@@ -1,4 +1,4 @@
-# vibe-mouse 🖱️
+# vibe-mouse
 
 [English](#english) | [中文](#中文)
 
@@ -12,7 +12,7 @@ Core open-source Vibecoding interactive mouse project, belonging to a self-devel
 # Self-Developed Vibecoding Interactive Mouse 
 A brand-new coding-based human-computer interaction paradigm that breaks the operational limitations of traditional mice, supporting refined and fully customizable interaction logic. 
  
-# Nation’s First Open-Source Robot Actuator 
+# Nation's First Open-Source Robot Actuator 
 An open-source robot motion driving architecture featuring reusability, secondary development compatibility, and mass deployment capability. 
  
 # Limitless Mobile Intelligent Monitoring System 
@@ -26,70 +26,141 @@ Applicable to individual development, laboratory projects, smart device retrofit
 
 ---
 
-### New Features (Optimized Version)
+### Features
 
 - **Cross-Platform Key Adaptation**: Automatically identifies Mac (`Cmd`) or Windows/Linux (`Ctrl`), eliminating the need to manually modify shortcut configurations.
-- **System Tray**: Say goodbye to the dark command line! Once the program runs, it hides in the system tray (bottom right corner or top menu bar), and you can **right-click the icon to switch Vibe tools at any time**.
-- **One-Click Build**: Provides a `build.py` script to generate `.exe` or `.app` files with one click, making it easy for non-technical users to double-click and use directly.
+- **System Tray**: The program runs in the system tray. Right-click the icon to switch Vibe tools at any time.
+- **One-Click Build**: Provides a `build.py` script to generate `.exe` or `.app` files with one click.
+- **Multi-Device Input**: Pluggable adapter architecture supporting mouse, keyboard, gamepad, Bluetooth, IR remote, HID, and network/IoT devices.
+- **Visual Config Tool**: Open `config-tool.html` in a browser to configure tools, devices, and mappings visually — no backend required.
 
 ### Core Architecture
 
-- `core/config.py`: Defines the mapping configuration between platform shortcuts and mouse buttons, supporting persistence.
-- `core/executor.py`: Parses and executes corresponding shortcut combinations to achieve seamless interaction with major IDEs.
-- `core/listener.py`: Globally listens to mouse button events, intercepts corresponding buttons, and sends commands to the executor.
-- `core/main.py`: Project entry point.
+```
+Device Event → Adapter → Event (unified) → DeviceManager → Executor (keyboard shortcut)
+```
+
+| File | Description |
+|---|---|
+| `core/config.py` | Tool shortcuts & multi-device input mappings, with persistence |
+| `core/executor.py` | Parses and executes shortcut combinations |
+| `core/device_manager.py` | Manages all adapters and routes events to the executor |
+| `core/event.py` | Unified event abstraction layer (`DeviceType`, `InputType`, `Event`) |
+| `core/adapters/base.py` | Abstract base class for all adapters |
+| `core/adapters/mouse_adapter.py` | Mouse (pynput) |
+| `core/adapters/keyboard_adapter.py` | Keyboard / multimedia keys |
+| `core/adapters/gamepad_adapter.py` | Gamepad — Xbox, PS, Switch (pygame) |
+| `core/adapters/bluetooth_adapter.py` | BLE / Classic Bluetooth (bleak / pybluez) |
+| `core/adapters/ir_adapter.py` | IR remote — TV, AC (pyserial / broadlink / lirc) |
+| `core/adapters/hid_adapter.py` | Generic HID — Stream Deck, scanner (hidapi / pywinusb) |
+| `core/adapters/network_adapter.py` | IoT — MQTT / WebSocket / HTTP |
+| `core/system_tray.py` | System tray menu |
+| `core/main.py` | Entry point |
 
 ### Full Project Structure
 
 ```
 vibe-mouse/
-├── core/                  # Vibe Mouse 核心代码
-│   ├── config.py          # 配置与快捷键映射
-│   ├── executor.py        # 快捷键执行器
-│   ├── listener.py        # 鼠标按键监听
-│   ├── main.py            # 入口
-│   └── system_tray.py     # 系统托盘
-├── actuator/              # 开源机器人执行器模块
-│   ├── mechanical/        # 机械结构（赵王开源电机）
-│   ├── pcb/               # 线路板设计
-│   └── software/          # 固件与控制软件
-├── monitor/               # 无级移动智能监控系统
-│   ├── hardware/          # 硬件设计
-│   ├── firmware/          # 嵌入式固件
-│   └── software/          # 上位机与算法
-├── example/               # 示例工程
-│   ├── vibe-mouse-basic/  # Vibe Mouse 基础示例
-│   ├── actuator-single/   # 单执行器示例
-│   ├── actuator-group/    # 多执行器联动
-│   ├── monitor-patrol/    # 监控巡检示例
-│   └── integrated-demo/   # 三模块联动综合演示
-├── docs/                  # 文档
-│   ├── quickstart/        # 快速上手
-│   ├── hardware/          # 硬件文档
-│   ├── software/          # 软件文档
-│   ├── api/               # API 参考
-│   └── faq/               # 常见问题
-├── build.py               # 打包脚本
-└── requirements.txt       # 依赖清单
+├── core/                          # Vibe Mouse core
+│   ├── config.py                  # Config & shortcuts
+│   ├── executor.py                # Shortcut executor
+│   ├── device_manager.py          # Multi-device manager & event router
+│   ├── event.py                   # Unified event abstraction
+│   ├── adapters/                  # Pluggable device adapters
+│   │   ├── __init__.py
+│   │   ├── base.py
+│   │   ├── mouse_adapter.py
+│   │   ├── keyboard_adapter.py
+│   │   ├── gamepad_adapter.py
+│   │   ├── bluetooth_adapter.py
+│   │   ├── ir_adapter.py
+│   │   ├── hid_adapter.py
+│   │   └── network_adapter.py
+│   ├── main.py                    # Entry point
+│   └── system_tray.py             # System tray
+├── actuator/                      # Open-source robot actuator module
+│   ├── mechanical/                # Mechanical design (Zhao Wang Motor)
+│   ├── pcb/                       # Circuit board design
+│   └── software/                  # Firmware & control software
+├── monitor/                       # Stepless mobile monitoring system
+│   ├── hardware/                  # Hardware design
+│   ├── firmware/                  # Embedded firmware
+│   └── software/                  # Host software & algorithms
+├── example/                       # Example projects
+│   ├── vibe-mouse-basic/
+│   ├── actuator-single/
+│   ├── actuator-group/
+│   ├── monitor-patrol/
+│   └── integrated-demo/
+├── docs/                          # Documentation
+│   ├── quickstart/
+│   ├── hardware/
+│   ├── software/
+│   ├── api/
+│   └── faq/
+├── config-tool.html               # Visual config tool (browser-based, no backend)
+├── config.example.json            # Example multi-device config
+├── build.py                       # Build script
+└── requirements.txt               # Dependencies
 ```
 
 ### Default Mouse Mapping
 
-- **Mouse Middle Button** (middle) -> Accept AI Code (Accept Diff)
-- **Mouse Side Button 1** (button8) -> Invoke Inline Code Generation (Inline Edit / Builder)
-- **Mouse Side Button 2** (button9) -> Invoke AI Chat Panel (Toggle Chat)
+| Button | Action |
+|---|---|
+| Middle button | Accept AI code (Accept Diff) |
+| Side button 1 (button8) | Invoke inline code generation (Inline Edit) |
+| Side button 2 (button9) | Toggle AI chat panel (Toggle Chat) |
 
-*You can modify these later in the generated `config.json`.*
+*Customize in `config-tool.html` or `config.json`.*
 
-### Default Supported Tools
+### Supported Tools
 
-- `trae`: Default adaptation for Trae shortcuts (Ctrl+U, Ctrl+I, etc.)
-- `cursor`: Adaptation for Cursor (Ctrl+K, Ctrl+L, etc.)
-- `windsurf`: Adaptation for Windsurf (Ctrl+Shift+I, etc.)
-- `copilot`: Adaptation for GitHub Copilot (Ctrl+I, etc.)
-- `deveco_studio`: Adaptation for DevEco Studio CodeGenie (Alt+I Inline Chat, Alt+U Panel, Alt+Enter Accept)
-- `deveco_code`: Adaptation for DevEco Code CLI Agent (Tab Accept, Esc Dismiss)
-- `codearts`: Adaptation for Huawei Cloud CodeArts (Alt+C Multi-line, Alt+X Single-line, Tab Accept, Esc Dismiss)
+| Tool | Inline Edit | Toggle Chat | Accept | Reject |
+|---|---|---|---|---|
+| `trae` | Ctrl+U | Ctrl+I | Ctrl+Enter | Esc |
+| `cursor` | Ctrl+K | Ctrl+L | Ctrl+Enter | Esc |
+| `windsurf` | Ctrl+Shift+I | Ctrl+L | Ctrl+Enter | Esc |
+| `copilot` | Ctrl+I | Ctrl+Alt+I | Ctrl+Enter | Esc |
+| `deveco_studio` | Alt+I | Alt+U | Alt+Enter | Esc |
+| `deveco_code` | Tab | Esc | Tab | Esc |
+| `codearts` | Alt+C | Alt+X | Tab | Esc |
+
+### Supported Devices
+
+| Type | Adapter | Dependencies | Examples |
+|---|---|---|---|
+| Mouse | `mouse_adapter.py` | pynput | Any mouse with side buttons |
+| Keyboard | `keyboard_adapter.py` | pynput | Multimedia keys, foot pedals, PTT |
+| Gamepad | `gamepad_adapter.py` | pygame | Xbox, PS, Switch controllers |
+| Bluetooth | `bluetooth_adapter.py` | bleak / pybluez | Bluetooth desk phone, BLE remote, dial |
+| IR Remote | `ir_adapter.py` | pyserial / broadlink | TV remote, AC remote, learning remote |
+| HID Generic | `hid_adapter.py` | hidapi / pywinusb | Stream Deck, barcode scanner, presenter |
+| Network/IoT | `network_adapter.py` | paho-mqtt / websockets | Smart buttons, phone virtual controller |
+
+### Configuration
+
+**Option 1: Visual Config Tool (Recommended)**
+
+Open `config-tool.html` in any browser. Add devices, edit mappings, switch tools, then click "Save Config" to download `config.json`.
+
+**Option 2: Manual JSON Editing**
+
+Copy `config.example.json` to `config.json` and edit:
+
+```json
+{
+    "current_tool": "trae",
+    "devices": [
+        {"id": "mouse_default", "type": "mouse", "config": {}, "enabled": true},
+        {"id": "xbox", "type": "gamepad", "config": {"joystick_index": 0}, "enabled": true}
+    ],
+    "device_mappings": {
+        "mouse_default": {"button8": "inline_edit", "button9": "toggle_chat", "middle": "accept_diff"},
+        "xbox": {"a": "accept_diff", "b": "reject_diff", "x": "inline_edit", "y": "toggle_chat"}
+    }
+}
+```
 
 ### Usage
 
@@ -97,52 +168,39 @@ vibe-mouse/
    ```bash
    pip install -r requirements.txt
    ```
-
-2. Start the program:
+2. (Optional) Install adapter-specific dependencies as needed (pygame, bleak, pyserial, etc.)
+3. Configure via `config-tool.html` or `config.json`
+4. Start:
    ```bash
    python core/main.py
    ```
-   *After starting, a blue "V" icon will appear in the system tray. You can right-click it to switch IDEs (e.g., Trae, Cursor) or exit the program.*
+   A blue "V" icon appears in the system tray. Right-click to switch tools or exit.
 
-### Package as an Executable (No Python Environment Required)
+### Package as Executable
 
-If you want to send the tool to someone else to double-click and use:
+```bash
+pip install pyinstaller
+python build.py
+```
+Find `VibeMouse.exe` (Windows) or `VibeMouse.app` (Mac) in `dist/`.
 
-1. Ensure build dependencies are installed (`pyinstaller`)
-2. Run the build script:
-   ```bash
-   python build.py
-   ```
-3. Find `VibeMouse.exe` (Windows) or `VibeMouse.app` (Mac) in the `dist/` directory and send it to your friends!
+---
 
-## ⚙️ Technical Features (Revised) 
-1. Modular architecture with low coupling and high scalability 
-2. Fully open-source with no closed-source dependencies; all derivative projects must stay open-source under the license terms 
-3. Supports standalone deployment, dual-module linkage, and full three-module integration 
-4. Compatible with secondary development, academic research, and open-source project innovation 
+## Technical Features
+1. Modular, pluggable adapter architecture — add new devices without touching core logic
+2. Fully open-source, no closed-source dependencies; AGPL-3.0 strong copyleft
+3. Supports standalone deployment, dual-module linkage, and full three-module integration
+4. Compatible with secondary development, academic research, and open-source innovation
 
---- 
+---
 
-## 📄 Open-Source License 
-This project is licensed under the **GNU Affero General Public License v3.0 (AGPL-3.0)** to sustain the perpetual openness of this self-developed open-source technology stack, ensuring all derivative works give back to the open-source community. 
+## License
+**AGPL-3.0** — All derivative works must remain open-source. Cloud deployments must provide source code to users. No closed-source commercial use permitted.
 
-### Core Permissions 
-- Free access to, study, and research all source code of this project 
-- Free redistribution of unmodified original source code 
-- Permission for secondary development, technical modification, and academic research based on this project 
+---
 
-### Core Mandatory Restrictions (Strong Copyleft Provisions) 
-1. **Derivative works must remain open-source**: All modified, integrated, or secondarily developed works derived from this project must adopt the AGPL-3.0 license and release their complete corresponding source code. 
-2. **Cloud deployments require open-sourcing**: If the project is deployed as an online service accessible via network (without distributing installation packages), full runnable source code must be provided to all service end-users. 
-3. **Closed-source commercial use prohibited**: The original project and all its derivatives shall not be sold, privately licensed, or operated as closed-source commercial products. 
-
-### License Selection Rationale 
-AGPL-3.0 is chosen to protect core self-developed assets including the Nation’s First Open-Source Robot Actuator from unauthorized closed-source commercial exploitation. It guarantees all iterative improvements across the entire interaction-actuation-monitoring tech stack stay publicly accessible, fostering a fully transparent, freely shared open-source robotics ecosystem. 
-
---- 
-
-## 🤝 Star / Fork / Pull Request Welcome 
-This suite is a personal self-developed open-source system under continuous iteration. Developers are welcome to co-build China’s first open-source robot actuator ecosystem and the innovative Vibecoding intelligent interaction framework. All contributed code is automatically released under the AGPL-3.0 license.
+## Star / Fork / Pull Request Welcome
+Contributors are welcome to co-build China's first open-source robot actuator ecosystem and the innovative Vibecoding intelligent interaction framework. All contributed code is automatically released under AGPL-3.0.
 
 ---
 
@@ -168,70 +226,141 @@ This suite is a personal self-developed open-source system under continuous iter
 
 ---
 
-### 新特性 (优化版)
+### 功能特性
 
 - **跨平台按键自适应**: 自动识别 Mac (`Cmd`) 或 Windows/Linux (`Ctrl`)，无需手动修改快捷键配置。
-- **系统托盘**: 告别黑乎乎的命令行！程序运行后会隐藏在系统托盘（右下角或顶部菜单栏），你可以**右键点击图标随时切换 Vibe 工具**。
-- **一键打包**: 提供 `build.py` 脚本，可一键生成 `.exe` 或 `.app`，方便非技术人员直接双击使用。
+- **系统托盘**: 程序运行后隐藏在系统托盘，右键图标随时切换 Vibe 工具。
+- **一键打包**: 提供 `build.py` 脚本，一键生成 `.exe` 或 `.app`。
+- **多外设输入**: 可插拔适配器架构，支持鼠标、键盘、手柄、蓝牙、红外遥控、HID、网络/IoT 设备。
+- **可视化配置工具**: 用浏览器打开 `config-tool.html`，图形化配置工具、外设和映射，无需后端。
 
 ### 核心架构
 
-- `core/config.py`: 定义各平台快捷键与鼠标按键的映射配置，并支持持久化。
-- `core/executor.py`: 解析并执行对应快捷键组合，实现与各大 IDE 的无缝交互。
-- `core/listener.py`: 全局监听鼠标按键事件，拦截对应按键后下发指令给执行器。
-- `core/main.py`: 项目入口。
+```
+外设事件 → 适配器 → 统一事件 → 外设管理器 → 执行器（键盘快捷键）
+```
+
+| 文件 | 说明 |
+|---|---|
+| `core/config.py` | 工具快捷键 & 多外设输入映射，支持持久化 |
+| `core/executor.py` | 解析并执行快捷键组合 |
+| `core/device_manager.py` | 管理所有适配器，将事件路由到执行器 |
+| `core/event.py` | 统一事件抽象层 (`DeviceType`, `InputType`, `Event`) |
+| `core/adapters/base.py` | 适配器抽象基类 |
+| `core/adapters/mouse_adapter.py` | 鼠标 (pynput) |
+| `core/adapters/keyboard_adapter.py` | 键盘 / 多媒体键 |
+| `core/adapters/gamepad_adapter.py` | 游戏手柄 — Xbox、PS、Switch (pygame) |
+| `core/adapters/bluetooth_adapter.py` | BLE / 经典蓝牙 (bleak / pybluez) |
+| `core/adapters/ir_adapter.py` | 红外遥控 — 电视、空调 (pyserial / broadlink / lirc) |
+| `core/adapters/hid_adapter.py` | 通用 HID — Stream Deck、扫描枪 (hidapi / pywinusb) |
+| `core/adapters/network_adapter.py` | IoT — MQTT / WebSocket / HTTP |
+| `core/system_tray.py` | 系统托盘菜单 |
+| `core/main.py` | 入口 |
 
 ### 完整项目结构
 
 ```
 vibe-mouse/
-├── core/                  # Vibe Mouse 核心代码
-│   ├── config.py          # 配置与快捷键映射
-│   ├── executor.py        # 快捷键执行器
-│   ├── listener.py        # 鼠标按键监听
-│   ├── main.py            # 入口
-│   └── system_tray.py     # 系统托盘
-├── actuator/              # 开源机器人执行器模块
-│   ├── mechanical/        # 机械结构（赵王开源电机）
-│   ├── pcb/               # 线路板设计
-│   └── software/          # 固件与控制软件
-├── monitor/               # 无级移动智能监控系统
-│   ├── hardware/          # 硬件设计
-│   ├── firmware/          # 嵌入式固件
-│   └── software/          # 上位机与算法
-├── example/               # 示例工程
-│   ├── vibe-mouse-basic/  # Vibe Mouse 基础示例
-│   ├── actuator-single/   # 单执行器示例
-│   ├── actuator-group/    # 多执行器联动
-│   ├── monitor-patrol/    # 监控巡检示例
-│   └── integrated-demo/   # 三模块联动综合演示
-├── docs/                  # 文档
-│   ├── quickstart/        # 快速上手
-│   ├── hardware/          # 硬件文档
-│   ├── software/          # 软件文档
-│   ├── api/               # API 参考
-│   └── faq/               # 常见问题
-├── build.py               # 打包脚本
-└── requirements.txt       # 依赖清单
+├── core/                          # Vibe Mouse 核心
+│   ├── config.py                  # 配置与快捷键
+│   ├── executor.py                # 快捷键执行器
+│   ├── device_manager.py          # 多外设管理器 & 事件路由
+│   ├── event.py                   # 统一事件抽象
+│   ├── adapters/                  # 可插拔外设适配器
+│   │   ├── __init__.py
+│   │   ├── base.py
+│   │   ├── mouse_adapter.py
+│   │   ├── keyboard_adapter.py
+│   │   ├── gamepad_adapter.py
+│   │   ├── bluetooth_adapter.py
+│   │   ├── ir_adapter.py
+│   │   ├── hid_adapter.py
+│   │   └── network_adapter.py
+│   ├── main.py                    # 入口
+│   └── system_tray.py             # 系统托盘
+├── actuator/                      # 开源机器人执行器模块
+│   ├── mechanical/                # 机械结构（赵王开源电机）
+│   ├── pcb/                       # 线路板设计
+│   └── software/                  # 固件与控制软件
+├── monitor/                       # 无级移动智能监控系统
+│   ├── hardware/                  # 硬件设计
+│   ├── firmware/                  # 嵌入式固件
+│   └── software/                  # 上位机与算法
+├── example/                       # 示例工程
+│   ├── vibe-mouse-basic/
+│   ├── actuator-single/
+│   ├── actuator-group/
+│   ├── monitor-patrol/
+│   └── integrated-demo/
+├── docs/                          # 文档
+│   ├── quickstart/
+│   ├── hardware/
+│   ├── software/
+│   ├── api/
+│   └── faq/
+├── config-tool.html               # 可视化配置工具（浏览器打开，无需后端）
+├── config.example.json            # 多外设配置示例
+├── build.py                       # 打包脚本
+└── requirements.txt               # 依赖清单
 ```
 
 ### 默认鼠标映射
 
-- **鼠标中键** (middle) -> 接受 AI 代码 (Accept Diff)
-- **鼠标侧键 1** (button8) -> 唤起内联代码生成 (Inline Edit / Builder)
-- **鼠标侧键 2** (button9) -> 唤起 AI 聊天面板 (Toggle Chat)
+| 按键 | 动作 |
+|---|---|
+| 中键 | 接受 AI 代码 (Accept Diff) |
+| 侧键 1 (button8) | 唤起内联代码生成 (Inline Edit) |
+| 侧键 2 (button9) | 唤起 AI 聊天面板 (Toggle Chat) |
 
-*后续可在生成的 `config.json` 中自行修改。*
+*可在 `config-tool.html` 或 `config.json` 中自定义。*
 
-### 默认支持工具
+### 支持工具
 
-- `trae`: 默认适配 Trae 快捷键 (Ctrl+U, Ctrl+I 等)
-- `cursor`: 适配 Cursor (Ctrl+K, Ctrl+L 等)
-- `windsurf`: 适配 Windsurf (Ctrl+Shift+I 等)
-- `copilot`: 适配 GitHub Copilot (Ctrl+I 等)
-- `deveco_studio`: 适配 DevEco Studio CodeGenie (Alt+I 内联对话, Alt+U 面板, Alt+Enter 接受)
-- `deveco_code`: 适配 DevEco Code 终端 AI Agent (Tab 接受, Esc 关闭)
-- `codearts`: 适配华为云码道 CodeArts (Alt+C 多行续写, Alt+X 单行续写, Tab 接受, Esc 取消)
+| 工具 | 内联编辑 | 切换面板 | 接受 | 拒绝 |
+|---|---|---|---|---|
+| `trae` | Ctrl+U | Ctrl+I | Ctrl+Enter | Esc |
+| `cursor` | Ctrl+K | Ctrl+L | Ctrl+Enter | Esc |
+| `windsurf` | Ctrl+Shift+I | Ctrl+L | Ctrl+Enter | Esc |
+| `copilot` | Ctrl+I | Ctrl+Alt+I | Ctrl+Enter | Esc |
+| `deveco_studio` | Alt+I | Alt+U | Alt+Enter | Esc |
+| `deveco_code` | Tab | Esc | Tab | Esc |
+| `codearts` | Alt+C | Alt+X | Tab | Esc |
+
+### 支持外设
+
+| 类型 | 适配器 | 依赖库 | 示例设备 |
+|---|---|---|---|
+| 鼠标 | `mouse_adapter.py` | pynput | 任意带侧键鼠标 |
+| 键盘 | `keyboard_adapter.py` | pynput | 多媒体键、脚踏开关、PTT |
+| 游戏手柄 | `gamepad_adapter.py` | pygame | Xbox、PS、Switch 手柄 |
+| 蓝牙设备 | `bluetooth_adapter.py` | bleak / pybluez | 蓝牙电话座机、BLE 遥控器、旋钮 |
+| 红外遥控 | `ir_adapter.py` | pyserial / broadlink | 电视遥控器、空调遥控器、学习型遥控器 |
+| HID 通用 | `hid_adapter.py` | hidapi / pywinusb | Stream Deck、条码扫描枪、翻页笔 |
+| 网络/IoT | `network_adapter.py` | paho-mqtt / websockets | 智能家居按键、手机虚拟手柄 |
+
+### 配置方式
+
+**方式一：可视化配置工具（推荐）**
+
+浏览器打开 `config-tool.html`，添加外设、编辑映射、切换工具，点击"Save Config"下载 `config.json` 放到项目目录即可。
+
+**方式二：手动编辑 JSON**
+
+复制 `config.example.json` 为 `config.json` 并编辑：
+
+```json
+{
+    "current_tool": "trae",
+    "devices": [
+        {"id": "mouse_default", "type": "mouse", "config": {}, "enabled": true},
+        {"id": "xbox", "type": "gamepad", "config": {"joystick_index": 0}, "enabled": true}
+    ],
+    "device_mappings": {
+        "mouse_default": {"button8": "inline_edit", "button9": "toggle_chat", "middle": "accept_diff"},
+        "xbox": {"a": "accept_diff", "b": "reject_diff", "x": "inline_edit", "y": "toggle_chat"}
+    }
+}
+```
 
 ### 使用方法
 
@@ -239,49 +368,36 @@ vibe-mouse/
    ```bash
    pip install -r requirements.txt
    ```
-
-2. 启动程序:
+2. （可选）按需安装适配器依赖（pygame、bleak、pyserial 等）
+3. 通过 `config-tool.html` 或 `config.json` 配置
+4. 启动:
    ```bash
    python core/main.py
    ```
-   *程序启动后，会在系统托盘显示一个蓝色的 "V" 图标，你可以右键点击它来切换 IDE (如 Trae, Cursor 等) 或退出程序。*
+   系统托盘出现蓝色 "V" 图标，右键切换工具或退出。
 
-### 打包成可执行文件 (无需 Python 环境)
+### 打包成可执行文件
 
-如果你想把工具发给别人直接双击使用：
+```bash
+pip install pyinstaller
+python build.py
+```
+去 `dist/` 目录找到 `VibeMouse.exe` (Windows) 或 `VibeMouse.app` (Mac)。
 
-1. 确保安装了打包依赖 (`pyinstaller`)
-2. 运行打包脚本:
-   ```bash
-   python build.py
-   ```
-3. 去 `dist/` 目录下找到 `VibeMouse.exe` (Windows) 或 `VibeMouse.app` (Mac)，发给你的朋友即可！
+---
 
-## ⚙️ 技术特性 (修订版)
-1. 模块化架构，低耦合，高可扩展性
-2. 完全开源，无闭源依赖；所有衍生项目必须在许可条款下保持开源
+## 技术特性
+1. 模块化可插拔适配器架构 — 新增外设无需改动核心逻辑
+2. 完全开源，无闭源依赖；AGPL-3.0 强 Copyleft
 3. 支持独立部署、双模块联动及全三模块集成
 4. 兼容二次开发、学术研究及开源项目创新
 
 ---
 
-## 📄 开源许可
-本项目基于 **GNU Affero General Public License v3.0 (AGPL-3.0)** 许可，以维持这一自研开源技术栈的永久开放性，确保所有衍生作品反哺开源社区。
-
-### 核心权限
-- 自由获取、学习和研究本项目的所有源代码
-- 自由重新分发未修改的原始源代码
-- 允许基于本项目进行二次开发、技术修改和学术研究
-
-### 核心强制限制 (强 Copyleft 条款)
-1. **衍生作品必须保持开源**：所有基于本项目的修改、集成或二次开发的衍生作品，必须采用 AGPL-3.0 许可，并发布其完整的对应源代码。
-2. **云端部署要求开源**：如果项目作为通过网络访问的在线服务部署（不分发安装包），必须向所有服务端最终用户提供完整的可运行源代码。
-3. **禁止闭源商业使用**：原项目及其所有衍生作品不得作为闭源商业产品出售、私下授权或运营。
-
-### 许可选择的理由
-选择 AGPL-3.0 是为了保护包括全国首个开源机器人执行器在内的核心自研资产免受未经授权的闭源商业剥削。它保证了整个交互-驱动-监控技术栈的所有迭代改进保持公开可访问，培育一个完全透明、自由共享的开源机器人生态系统。
+## 开源许可
+**AGPL-3.0** — 所有衍生作品必须保持开源。云端部署须向用户提供源代码。禁止闭源商业使用。
 
 ---
 
-## 🤝 欢迎 Star / Fork / Pull Request
-本套件是一个持续迭代中的个人自研开源系统。欢迎开发者共同建设中国首个开源机器人执行器生态和创新的 Vibecoding 智能交互框架。所有贡献的代码将自动在 AGPL-3.0 许可下发布。
+## 欢迎 Star / Fork / Pull Request
+欢迎开发者共同建设中国首个开源机器人执行器生态和创新的 Vibecoding 智能交互框架。所有贡献的代码将自动在 AGPL-3.0 许可下发布。

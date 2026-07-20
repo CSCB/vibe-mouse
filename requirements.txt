@@ -1,4 +1,30 @@
+# 核心依赖 / Core dependencies
 pynput==1.7.6
 pystray==0.19.5
 Pillow==10.2.0
 pyinstaller==6.4.0
+
+# 外设适配器可选依赖 / Optional adapter dependencies
+# 游戏手柄 / Gamepad
+# pygame
+
+# 蓝牙 BLE / Bluetooth BLE
+# bleak
+
+# 蓝牙 Classic / Bluetooth Classic
+# pybluez
+
+# 串口红外 / Serial IR
+# pyserial
+
+# Broadlink WiFi 红外
+# broadlink
+
+# HID 设备 / HID devices
+# hidapi
+# pywinusb  # Windows only
+
+# 网络/IoT / Network & IoT
+# paho-mqtt
+# websockets
+# flask

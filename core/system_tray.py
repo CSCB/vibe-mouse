@@ -4,10 +4,10 @@ from pystray import MenuItem as item
 from core.config import VibeTool
 
 class SystemTray:
-    def __init__(self, config, executor, listener, on_exit_callback):
+    def __init__(self, config, executor, device_manager, on_exit_callback):
         self.config = config
         self.executor = executor
-        self.listener = listener
+        self.device_manager = device_manager
         self.on_exit_callback = on_exit_callback
         self.icon = None
 
@@ -64,7 +64,7 @@ class SystemTray:
         )
 
     def exit_app(self, icon, item):
-        self.listener.stop()
+        self.device_manager.stop_all()
         icon.stop()
         if self.on_exit_callback:
             self.on_exit_callback()
