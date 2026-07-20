@@ -39,6 +39,40 @@ Applicable to individual development, laboratory projects, smart device retrofit
 - `core/listener.py`: Globally listens to mouse button events, intercepts corresponding buttons, and sends commands to the executor.
 - `core/main.py`: Project entry point.
 
+### Full Project Structure
+
+```
+vibe-mouse/
+├── core/                  # Vibe Mouse 核心代码
+│   ├── config.py          # 配置与快捷键映射
+│   ├── executor.py        # 快捷键执行器
+│   ├── listener.py        # 鼠标按键监听
+│   ├── main.py            # 入口
+│   └── system_tray.py     # 系统托盘
+├── actuator/              # 开源机器人执行器模块
+│   ├── mechanical/        # 机械结构（赵王开源电机）
+│   ├── pcb/               # 线路板设计
+│   └── software/          # 固件与控制软件
+├── monitor/               # 无级移动智能监控系统
+│   ├── hardware/          # 硬件设计
+│   ├── firmware/          # 嵌入式固件
+│   └── software/          # 上位机与算法
+├── example/               # 示例工程
+│   ├── vibe-mouse-basic/  # Vibe Mouse 基础示例
+│   ├── actuator-single/   # 单执行器示例
+│   ├── actuator-group/    # 多执行器联动
+│   ├── monitor-patrol/    # 监控巡检示例
+│   └── integrated-demo/   # 三模块联动综合演示
+├── docs/                  # 文档
+│   ├── quickstart/        # 快速上手
+│   ├── hardware/          # 硬件文档
+│   ├── software/          # 软件文档
+│   ├── api/               # API 参考
+│   └── faq/               # 常见问题
+├── build.py               # 打包脚本
+└── requirements.txt       # 依赖清单
+```
+
 ### Default Mouse Mapping
 
 - **Mouse Middle Button** (middle) -> Accept AI Code (Accept Diff)
@@ -145,6 +179,40 @@ This suite is a personal self-developed open-source system under continuous iter
 - `core/executor.py`: 解析并执行对应快捷键组合，实现与各大 IDE 的无缝交互。
 - `core/listener.py`: 全局监听鼠标按键事件，拦截对应按键后下发指令给执行器。
 - `core/main.py`: 项目入口。
+
+### 完整项目结构
+
+```
+vibe-mouse/
+├── core/                  # Vibe Mouse 核心代码
+│   ├── config.py          # 配置与快捷键映射
+│   ├── executor.py        # 快捷键执行器
+│   ├── listener.py        # 鼠标按键监听
+│   ├── main.py            # 入口
+│   └── system_tray.py     # 系统托盘
+├── actuator/              # 开源机器人执行器模块
+│   ├── mechanical/        # 机械结构（赵王开源电机）
+│   ├── pcb/               # 线路板设计
+│   └── software/          # 固件与控制软件
+├── monitor/               # 无级移动智能监控系统
+│   ├── hardware/          # 硬件设计
+│   ├── firmware/          # 嵌入式固件
+│   └── software/          # 上位机与算法
+├── example/               # 示例工程
+│   ├── vibe-mouse-basic/  # Vibe Mouse 基础示例
+│   ├── actuator-single/   # 单执行器示例
+│   ├── actuator-group/    # 多执行器联动
+│   ├── monitor-patrol/    # 监控巡检示例
+│   └── integrated-demo/   # 三模块联动综合演示
+├── docs/                  # 文档
+│   ├── quickstart/        # 快速上手
+│   ├── hardware/          # 硬件文档
+│   ├── software/          # 软件文档
+│   ├── api/               # API 参考
+│   └── faq/               # 常见问题
+├── build.py               # 打包脚本
+└── requirements.txt       # 依赖清单
+```
 
 ### 默认鼠标映射
 
