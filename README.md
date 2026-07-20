@@ -53,6 +53,8 @@ Applicable to individual development, laboratory projects, smart device retrofit
 - `cursor`: Adaptation for Cursor (Ctrl+K, Ctrl+L, etc.)
 - `windsurf`: Adaptation for Windsurf (Ctrl+Shift+I, etc.)
 - `copilot`: Adaptation for GitHub Copilot (Ctrl+I, etc.)
+- `deveco_studio`: Adaptation for DevEco Studio CodeGenie (Alt+I Inline Chat, Alt+U Panel, Alt+Enter Accept)
+- `deveco_code`: Adaptation for DevEco Code CLI Agent (Tab Accept, Esc Dismiss)
 
 ### Usage
 
@@ -158,6 +160,8 @@ This suite is a personal self-developed open-source system under continuous iter
 - `cursor`: 适配 Cursor (Ctrl+K, Ctrl+L 等)
 - `windsurf`: 适配 Windsurf (Ctrl+Shift+I 等)
 - `copilot`: 适配 GitHub Copilot (Ctrl+I 等)
+- `deveco_studio`: 适配 DevEco Studio CodeGenie (Alt+I 内联对话, Alt+U 面板, Alt+Enter 接受)
+- `deveco_code`: 适配 DevEco Code 终端 AI Agent (Tab 接受, Esc 关闭)
 
 ### 使用方法
 

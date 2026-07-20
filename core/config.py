@@ -8,6 +8,8 @@ class VibeTool(Enum):
     CURSOR = "cursor"
     WINDSURF = "windsurf"
     COPILOT = "copilot"
+    DEVECO_STUDIO = "deveco_studio"
+    DEVECO_CODE = "deveco_code"
 
 # 判断操作系统，自适应 Ctrl 或 Cmd
 # Detect OS to adaptively use Ctrl or Cmd
@@ -40,6 +42,24 @@ DEFAULT_SHORTCUTS = {
         "toggle_chat": [CTRL_KEY, "alt", "i"], # 唤起 Chat view / Invoke Chat view
         "accept_diff": [CTRL_KEY, "enter"],
         "reject_diff": ["esc"],
+    },
+    # DevEco Studio (HarmonyOS IDE, CodeGenie 内置 AI 助手)
+    # DevEco Studio (HarmonyOS IDE with built-in CodeGenie AI assistant)
+    # 参考文档: https://developer.huawei.com/consumer/cn/doc/harmonyos-guides/ide-edit-area-code-generation
+    VibeTool.DEVECO_STUDIO.value: {
+        "inline_edit": ["alt", "i"],                     # Inline Chat (Win: Alt+I, Mac: Cmd+I 通过 Alt 映射)
+        "toggle_chat": ["alt", "u"],                     # CodeGenie 面板 (Win: Alt+U, Mac: Option+U)
+        "accept_diff": ["alt", "enter"],                 # Accept All (接受全部生成内容)
+        "reject_diff": ["esc"],                          # 拒绝 / 关闭 (Reject / Dismiss)
+    },
+    # DevEco Code (HarmonyOS 7 终端 AI Agent, 基于 OpenCode)
+    # DevEco Code (HarmonyOS 7 Terminal AI Agent, based on OpenCode)
+    # 参考: HDC 2026 发布, npm: @deveco-test/deveco-code
+    VibeTool.DEVECO_CODE.value: {
+        "inline_edit": ["tab"],                          # Tab 接受代码补全 (Accept suggestion)
+        "toggle_chat": ["esc"],                          # Esc 取消/退出当前会话 (Dismiss/Exit session)
+        "accept_diff": ["tab"],                          # Tab 接受编辑 (Accept edit)
+        "reject_diff": ["esc"],                          # Esc 拒绝编辑 (Reject edit)
     }
 }
 
