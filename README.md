@@ -32,7 +32,8 @@ Applicable to individual development, laboratory projects, smart device retrofit
 - **System Tray**: The program runs in the system tray. Right-click the icon to switch Vibe tools at any time.
 - **One-Click Build**: Provides a `build.py` script to generate `.exe` or `.app` files with one click.
 - **Multi-Device Input**: Pluggable adapter architecture supporting mouse, keyboard, gamepad, Bluetooth, IR remote, HID, and network/IoT devices.
-- **Visual Config Tool**: Open `config-tool.html` in a browser to configure tools, devices, and mappings visually — no backend required.
+- **Hardware Feedback**: Instant feedback when actions are triggered or completed — via system sound, screen overlay, tray notification, LED indicator, or vibration motor (hardware requires custom setup).
+- **Visual Config Tool**: Open `config-tool.html` in a browser to configure tools, devices, mappings, and feedback visually — no backend required.
 
 ### Core Architecture
 
@@ -43,7 +44,8 @@ Device Event → Adapter → Event (unified) → DeviceManager → Executor (key
 | File | Description |
 |---|---|
 | `core/config.py` | Tool shortcuts & multi-device input mappings, with persistence |
-| `core/executor.py` | Parses and executes shortcut combinations |
+| `core/executor.py` | Parses and executes shortcut combinations, with feedback triggers |
+| `core/feedback.py` | Feedback manager: sound, overlay, notification, LED, vibration |
 | `core/device_manager.py` | Manages all adapters and routes events to the executor |
 | `core/event.py` | Unified event abstraction layer (`DeviceType`, `InputType`, `Event`) |
 | `core/adapters/base.py` | Abstract base class for all adapters |

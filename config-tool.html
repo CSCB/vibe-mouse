@@ -108,6 +108,34 @@ table.mt input:focus,table.mt select:focus{outline:none;border-color:var(--accen
       <div id="mapEditor"></div>
     </div>
 
+    <!-- Feedback -->
+    <div class="card">
+      <h3>&#128266; Feedback / 硬件反馈 <span class="badge">new</span></h3>
+      <p style="font-size:12px;color:var(--text2);margin-bottom:12px">
+        当操作触发或完成时，通过声音/浮窗/通知/LED/震动给用户即时反馈
+      </p>
+      <div id="feedbackEditor"></div>
+      <div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--border)">
+        <h4 style="font-size:12px;color:var(--text2);margin-bottom:8px">&#9881; Hardware Settings / 硬件设置</h4>
+        <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px">
+          <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer">
+            <input type="checkbox" id="fbLed" onchange="updateFeedback()"> LED Indicator / LED指示灯
+          </label>
+          <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer">
+            <input type="checkbox" id="fbVib" onchange="updateFeedback()"> Vibration / 震动马达
+          </label>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px">
+          <div><label style="font-size:11px;color:var(--text2)">Serial Port</label>
+            <input id="fbPort" placeholder="e.g. COM3" style="width:100%;padding:5px 8px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:12px;margin-top:3px" onchange="updateFeedback()">
+          </div>
+          <div><label style="font-size:11px;color:var(--text2)">Baudrate</label>
+            <input id="fbBaud" value="9600" style="width:100%;padding:5px 8px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:12px;margin-top:3px" onchange="updateFeedback()">
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- Raw JSON -->
     <div class="card">
       <h3>&#128221; Raw Config (JSON) <span class="badge">edit directly</span></h3>
@@ -143,7 +171,13 @@ function defaults(){
       codearts:{inline_edit:["alt","c"],toggle_chat:["alt","x"],accept_diff:["tab"],reject_diff:["esc"],voice_input:["alt","a"]}
     },
     devices:[{id:"mouse_default",type:"mouse",config:{},enabled:true}],
-    device_mappings:{mouse_default:{button8:"inline_edit",button9:"toggle_chat",middle:"accept_diff"}}
+    device_mappings:{mouse_default:{button8:"inline_edit",button9:"toggle_chat",middle:"accept_diff"}},
+    feedback:{
+      on_received:["sound","overlay"],
+      on_success:["sound"],
+      on_error:["sound","notification","overlay"],
+      hardware:{led_enabled:false,vibration_enabled:false,serial_port:null,serial_baudrate:9600}
+    }
   };
 }
 
@@ -162,6 +196,7 @@ function render(){
   renderTools();
   renderDevices();
   renderMappings();
+  renderFeedback();
   refreshRaw();
 }
 
@@ -212,6 +247,57 @@ function renderMappings(){
 
 function refreshRaw(){
   document.getElementById("rawJson").value=JSON.stringify(cfg,null,4);
+}
+
+function renderFeedback(){
+  const fb=cfg.feedback||{};
+  const types=[
+    {key:"sound",label:"Sound / 系统声音"},
+    {key:"overlay",label:"Overlay / 屏幕浮窗"},
+    {key:"notification",label:"Notification / 托盘通知"},
+    {key:"led",label:"LED / 指示灯"},
+    {key:"vibration",label:"Vibration / 震动"}
+  ];
+  const timings=[
+    {key:"on_received",label:"On Received / 收到输入时",color:"#F59E0B"},
+    {key:"on_success",label:"On Success / 执行完成时",color:"#22C55E"},
+    {key:"on_error",label:"On Error / 执行失败时",color:"#EF4444"}
+  ];
+  let html='<table class="mt"><tr><th>Timing</th><th>Feedback Types</th></tr>';
+  timings.forEach(t=>{
+    const enabled=fb[t.key]||[];
+    html+=`<tr><td style="white-space:nowrap;font-weight:500;color:${t.color}">${t.label}</td><td style="display:flex;flex-wrap:wrap;gap:6px">`;
+    types.forEach(tp=>{
+      const checked=enabled.includes(tp.key)?'checked':'';
+      html+=`<label style="display:flex;align-items:center;gap:4px;font-size:12px;cursor:pointer;background:var(--surface2);padding:3px 8px;border-radius:6px">`;
+      html+=`<input type="checkbox" ${checked} onchange="updateFeedback()" data-timing="${t.key}" data-type="${tp.key}"> ${tp.label}</label>`;
+    });
+    html+=`</td></tr>`;
+  });
+  html+='</table>';
+  document.getElementById("feedbackEditor").innerHTML=html;
+
+  const hw=fb.hardware||{};
+  document.getElementById("fbLed").checked=hw.led_enabled||false;
+  document.getElementById("fbVib").checked=hw.vibration_enabled||false;
+  document.getElementById("fbPort").value=hw.serial_port||"";
+  document.getElementById("fbBaud").value=hw.serial_baudrate||9600;
+}
+
+function updateFeedback(){
+  cfg.feedback=cfg.feedback||{};
+  const timings=["on_received","on_success","on_error"];
+  timings.forEach(t=>{
+    const boxes=document.querySelectorAll(`input[data-timing="${t}"]`);
+    cfg.feedback[t]=Array.from(boxes).filter(b=>b.checked).map(b=>b.dataset.type);
+  });
+  cfg.feedback.hardware={
+    led_enabled:document.getElementById("fbLed").checked,
+    vibration_enabled:document.getElementById("fbVib").checked,
+    serial_port:document.getElementById("fbPort").value.trim()||null,
+    serial_baudrate:parseInt(document.getElementById("fbBaud").value)||9600
+  };
+  persist();refreshRaw();
 }
 
 // ---- Actions ----

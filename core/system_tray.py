@@ -10,6 +10,9 @@ class SystemTray:
         self.device_manager = device_manager
         self.on_exit_callback = on_exit_callback
         self.icon = None
+        # 将通知处理器注册到 feedback manager
+        if hasattr(executor, 'feedback'):
+            executor.feedback.set_notification_handler(self.notify)
 
     def create_image(self):
         # 创建一个简单的图标 (蓝底白字 V)
@@ -68,6 +71,11 @@ class SystemTray:
         icon.stop()
         if self.on_exit_callback:
             self.on_exit_callback()
+
+    def notify(self, message):
+        """系统托盘通知"""
+        if self.icon:
+            self.icon.notify(message, "Vibe Mouse")
 
     def run(self):
         self.icon = pystray.Icon(

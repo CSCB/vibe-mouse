@@ -2,6 +2,7 @@ import json
 import os
 import platform
 from enum import Enum
+from .feedback import DEFAULT_FEEDBACK
 
 class VibeTool(Enum):
     TRAE = "trae"
@@ -95,6 +96,7 @@ class Config:
         self.shortcuts = {}
         self.devices = []
         self.device_mappings = {}
+        self.feedback = {}
         self.load_config()
 
     def load_config(self):
@@ -129,6 +131,9 @@ class Config:
         else:
             self.device_mappings = DEFAULT_DEVICE_MAPPINGS.copy()
 
+        # 反馈配置
+        self.feedback = data.get("feedback", DEFAULT_FEEDBACK.copy())
+
         # 如果配置文件不存在或刚迁移，保存一次
         if not os.path.exists(self.config_file) or "mouse_mapping" in data:
             self.save_config()
@@ -139,6 +144,7 @@ class Config:
             "shortcuts": self.shortcuts,
             "devices": self.devices,
             "device_mappings": self.device_mappings,
+            "feedback": self.feedback,
         }
         with open(self.config_file, "w", encoding="utf-8") as f:
             json.dump(data, f, indent=4, ensure_ascii=False)
