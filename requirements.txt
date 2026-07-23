@@ -4,6 +4,10 @@ pystray==0.19.5
 Pillow==10.2.0
 pyinstaller==6.4.0
 
+# 窗口检测 / Window detection
+pywin32==306          # Windows 窗口焦点检测
+psutil==5.9.8         # 进程信息获取
+
 # 外设适配器可选依赖 / Optional adapter dependencies
 # 游戏手柄 / Gamepad
 # pygame

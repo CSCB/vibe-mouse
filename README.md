@@ -38,6 +38,9 @@ Applicable to individual development, laboratory projects, smart device retrofit
 - **Voice-to-LLM Bridge**: Speech recognition results can be sent directly to Huawei Cloud Token Plan / MaaS (GLM / DeepSeek / Kimi). Just fill in your API Key and say "generate a quicksort function" — AI writes the code for you.
 - **Prompt Refine (Optional)**: Converts colloquial speech into precise, structured prompts before sending to the LLM. Corrects homophones, accents, and technical terminology, while expanding vague requests into actionable instructions.
 - **Skill System (Complete Config Unit) (Beta)**: A Skill = a complete work mode. Bind any button/key to a Skill (`"skill:<name>"`) or let voice keywords auto-match. Each Skill can override shortcuts, feedback config, device activation, and system prompt — all in one package. Supports YAML/JSON files and built-in templates (quick-code, code-review, presentation, explain-code).
+- **Auto Window Detection (Beta)**: Automatically detects which AI IDE is currently in focus (Trae, Cursor, Windsurf, VS Code, DevEco, CodeArts) and switches shortcuts accordingly. No more manual switching.
+- **Tool Switch History**: Every tool switch saves a full state snapshot (active Skill, shortcut overrides, feedback config). Switch back and your previous context is restored instantly.
+- **GUI Client Mode**: Run `python core/main.py --gui` for a desktop panel showing current tool, active Skill, switch history, and auto-detection toggle.
 - **Visual Config Tool**: Open `config-tool.html` in a browser to configure tools, devices, mappings, feedback, Token Plan, and Skills visually — no backend required.
 
 ### Core Architecture
@@ -54,6 +57,9 @@ Device Event → Adapter → Event (unified) → DeviceManager → Executor (key
 | `core/token_plan.py` | Huawei Cloud Token Plan / MaaS client — just fill in API Key |
 | `core/voice_llm.py` | Voice-to-LLM bridge + Prompt Refine: speech → optimized prompt → LLM → action |
 | `core/skill_engine.py` | Skill parsing and matching engine — trigger words → system_prompt injection |
+| `core/window_detector.py` | Cross-platform foreground window detection — auto-identifies AI IDE |
+| `core/tool_switcher.py` | Tool switch history with full state snapshots (Skill, shortcuts, feedback) |
+| `core/gui_client.py` | Desktop GUI panel (tkinter) — status, history, auto-detect toggle |
 | `core/device_manager.py` | Manages all adapters and routes events to the executor |
 | `core/event.py` | Unified event abstraction layer (`DeviceType`, `InputType`, `Event`) |
 | `core/adapters/base.py` | Abstract base class for all adapters |
@@ -339,6 +345,32 @@ This maps the mouse side button to the `code-review` Skill — pressing it activ
 5. The optimized text + skill system prompt are sent to the LLM
 6. The response is handled according to the skill's mode
 
+### Window Auto-Detection
+
+Enable automatic window focus detection in GUI mode:
+
+```bash
+python core/main.py --gui
+```
+
+In the GUI panel, check "Enable window focus auto-detection". VibeMouse will poll the foreground window every second and automatically switch to the matching tool config when you switch between IDEs.
+
+Detection is based on window title keywords and process name matching. Supported tools: Trae, Cursor, Windsurf, VS Code (Copilot), DevEco Studio, DevEco Code, CodeArts.
+
+### GUI Client Mode
+
+```bash
+python core/main.py --gui
+```
+
+The GUI panel shows:
+- **Current Tool**: The active AI IDE (auto-detected or manually selected)
+- **Current Skill**: The active Skill mode and its version
+- **Auto-Detection Toggle**: Enable/disable window focus monitoring
+- **Tool Buttons**: Manually switch to any tool
+- **Quick Actions**: Quick switch back, refresh detection, open config, exit Skill
+- **Switch History**: Recent tool switches with timestamps and Skill info
+
 ### Usage
 
 1. Install dependencies:
@@ -415,6 +447,9 @@ Contributors are welcome to co-build China's first open-source robot actuator ec
 - **语音接入大模型**: 语音识别结果可直接发送给华为云 Token Plan / MaaS（GLM / DeepSeek / Kimi），填入 API Key 后说"生成一个快排函数"，AI 自动帮你写代码。
 - **提示词优化（可选）**: 将口语化的语音输入转化为精准、结构化的高质量 Prompt。纠正同音字/口音/编程术语误识别，同时将模糊描述扩展为明确指令（如"写个排序"→"用Python实现快速排序，包含输入验证和注释"）。
 - **Skill 技能系统（完整配置单元）（Beta）**: 一个 Skill = 一套完整工作模式。任意按键可绑定 Skill（`"skill:<name>"`），也可语音关键词自动匹配。每个 Skill 可覆盖快捷键、反馈配置、设备激活和系统提示词——全部打包在一起。支持 YAML/JSON 文件和内置模板（quick-code、code-review、presentation、explain-code）。
+- **窗口焦点自动检测（Beta）**: 自动检测当前焦点窗口属于哪个 AI IDE（Trae、Cursor、Windsurf、VS Code、DevEco、CodeArts），自动切换对应快捷键配置，无需手动切换。
+- **工具切换历史记录**: 每次切换工具自动保存完整状态快照（激活的 Skill、快捷键覆盖、反馈配置）。切回工具时自动恢复之前的上下文。
+- **GUI 客户端模式**: 运行 `python core/main.py --gui` 启动桌面面板，显示当前工具、激活的 Skill、切换历史和自动检测开关。
 - **可视化配置工具**: 用浏览器打开 `config-tool.html`，图形化配置工具、外设、映射、反馈、Token Plan 和 Skills，无需后端。
 
 ### 核心架构
@@ -431,6 +466,9 @@ Contributors are welcome to co-build China's first open-source robot actuator ec
 | `core/token_plan.py` | 华为云 Token Plan / MaaS 客户端，填入 API Key 即可 |
 | `core/voice_llm.py` | 语音-大模型桥接器 + 提示词优化：语音 → 优化 Prompt → LLM → 动作 |
 | `core/skill_engine.py` | Skill 解析与匹配引擎 — 触发词 → system_prompt 注入 |
+| `core/window_detector.py` | 跨平台前台窗口检测器 — 自动识别当前 AI IDE |
+| `core/tool_switcher.py` | 工具切换历史记录 — 完整状态快照（Skill、快捷键、反馈） |
+| `core/gui_client.py` | 桌面 GUI 面板（tkinter）— 状态、历史、自动检测开关 |
 | `core/device_manager.py` | 管理所有适配器，将事件路由到执行器 |
 | `core/event.py` | 统一事件抽象层 (`DeviceType`, `InputType`, `Event`) |
 | `core/adapters/base.py` | 适配器抽象基类 |
@@ -735,6 +773,32 @@ enabled: true
 5. 优化后的文本 + Skill 系统提示词发送给大模型
 6. 按照 Skill 设定的模式处理模型回复
 
+### 窗口焦点自动检测
+
+在 GUI 客户端模式下启用自动检测：
+
+```bash
+python core/main.py --gui
+```
+
+在 GUI 面板中勾选「启用窗口焦点自动检测」。VibeMouse 每秒轮询一次前台窗口，当你在多个 IDE 间切换时自动切换到对应的工具配置。
+
+检测基于窗口标题关键词和进程名匹配。支持工具：Trae、Cursor、Windsurf、VS Code（Copilot）、DevEco Studio、DevEco Code、CodeArts。
+
+### GUI 客户端模式
+
+```bash
+python core/main.py --gui
+```
+
+GUI 面板显示：
+- **当前工具**: 当前激活的 AI IDE（自动检测或手动选择）
+- **当前 Skill**: 当前激活的 Skill 模式及版本
+- **自动检测开关**: 启用/禁用窗口焦点监控
+- **工具按钮**: 手动切换到任意工具
+- **快捷操作**: 快速回切、刷新检测、打开配置、退出 Skill
+- **切换历史**: 最近工具切换记录，含时间戳和 Skill 信息
+
 ### 使用方法
 
 1. 安装依赖:
@@ -743,11 +807,17 @@ enabled: true
    ```
 2. （可选）按需安装适配器依赖（pygame、bleak、pyserial 等）
 3. 通过 `config-tool.html` 或 `config.json` 配置
-4. 启动:
+4. 启动（托盘模式/默认）:
    ```bash
    python core/main.py
    ```
    系统托盘出现蓝色 "V" 图标，右键切换工具或退出。
+
+   或启动 GUI 客户端模式:
+   ```bash
+   python core/main.py --gui
+   ```
+   打开桌面面板，支持自动检测、切换历史和 Skill 管理。
 
 ### 打包成可执行文件
 
