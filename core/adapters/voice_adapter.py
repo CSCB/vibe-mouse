@@ -282,6 +282,19 @@ class VoiceAdapter(BaseAdapter):
                     raw_data={"text": text, "mode": "command"}
                 ))
                 print(f"[VoiceAdapter] Matched / 匹配: \"{text}\" -> {matched_action}")
+            else:
+                # 未匹配到本地命令，若开启 LLM 模式，将原始文本发送给大模型
+                use_llm = self.config.get("use_llm", False)
+                if use_llm:
+                    self._emit(Event(
+                        device_type=DeviceType.VOICE,
+                        device_id=self.device_id,
+                        input_type=InputType.VOICE,
+                        input_id="__voice_text__",
+                        value=text,
+                        raw_data={"text": text, "mode": "llm"}
+                    ))
+                    print(f"[VoiceAdapter] LLM mode / 发送至大模型: \"{text}\"")
 
     def _match_command(self, text: str, command_phrases: dict) -> str:
         """

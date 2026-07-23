@@ -95,7 +95,19 @@ class DeviceManager:
         """
         统一事件回调
         根据 device_id 查找对应的 input_id -> action 映射，调用执行器。
+        特殊处理：语音 LLM 模式的事件直接交给 VoiceLLMBridge。
         """
+        # 特殊事件：语音文本 -> 大模型
+        if event.input_id == "__voice_text__" and isinstance(event.value, str):
+            text = event.value
+            if hasattr(self.executor, 'voice_llm'):
+                threading.Thread(
+                    target=self.executor.voice_llm.process_voice_text,
+                    args=(text, "auto"),
+                    daemon=True
+                ).start()
+            return
+
         # 获取该设备类型的映射配置
         mapping = self.config.get_device_mapping(event.device_id)
         if not mapping:

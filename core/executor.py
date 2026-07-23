@@ -1,12 +1,17 @@
 import time
 from pynput.keyboard import Controller, Key, KeyCode
 from .feedback import FeedbackManager, FeedbackTiming
+from .voice_llm import VoiceLLMBridge
 
 class ActionExecutor:
     def __init__(self, config):
         self.config = config
         self.keyboard = Controller()
         self.feedback = FeedbackManager(config.feedback if hasattr(config, 'feedback') else None)
+
+        # 语音 + 大模型桥接器（华为云 Token Plan）
+        tp_config = config.token_plan if hasattr(config, 'token_plan') else {}
+        self.voice_llm = VoiceLLMBridge(tp_config, executor=self)
         
         # 字符串到 pynput.keyboard.Key 的映射
         # Mapping from string to pynput.keyboard.Key

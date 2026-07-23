@@ -40,6 +40,7 @@
             "config": {
                 "mode": "command",
                 "language": "zh-CN",
+                "use_llm": true,
                 "command_phrases": {
                     "accept_diff": ["接受", "采纳", "同意", "yes", "accept", "ok"],
                     "reject_diff": ["拒绝", "取消", "不要", "no", "reject", "cancel"],
@@ -117,5 +118,25 @@
             "button_a": "inline_edit",
             "button_b": "accept_diff"
         }
+    },
+    "feedback": {
+        "on_received": ["sound", "overlay"],
+        "on_success": ["sound"],
+        "on_error": ["sound", "notification", "overlay"],
+        "hardware": {
+            "led_enabled": false,
+            "vibration_enabled": false,
+            "serial_port": null,
+            "serial_baudrate": 9600
+        }
+    },
+    "token_plan": {
+        "enabled": false,
+        "api_key": "YOUR_HW_CLOUD_API_KEY",
+        "endpoint": "https://maas-api.cn-north-4.myhuaweicloud.com",
+        "model": "glm-4.7",
+        "max_tokens": 2048,
+        "temperature": 0.7,
+        "refine_voice_text": false
     }
 }

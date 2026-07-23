@@ -33,7 +33,9 @@ Applicable to individual development, laboratory projects, smart device retrofit
 - **One-Click Build**: Provides a `build.py` script to generate `.exe` or `.app` files with one click.
 - **Multi-Device Input**: Pluggable adapter architecture supporting mouse, keyboard, gamepad, Bluetooth, IR remote, HID, and network/IoT devices.
 - **Hardware Feedback**: Instant feedback when actions are triggered or completed — via system sound, screen overlay, tray notification, LED indicator, or vibration motor (hardware requires custom setup).
-- **Visual Config Tool**: Open `config-tool.html` in a browser to configure tools, devices, mappings, and feedback visually — no backend required.
+- **Voice-to-LLM Bridge**: Speech recognition results can be sent directly to Huawei Cloud Token Plan / MaaS (GLM / DeepSeek / Kimi). Just fill in your API Key and say "generate a quicksort function" — AI writes the code for you.
+- **Prompt Refine (Optional)**: Converts colloquial speech into precise, structured prompts before sending to the LLM. Corrects homophones, accents, and technical terminology, while expanding vague requests into actionable instructions.
+- **Visual Config Tool**: Open `config-tool.html` in a browser to configure tools, devices, mappings, feedback, and Token Plan visually — no backend required.
 
 ### Core Architecture
 
@@ -46,6 +48,8 @@ Device Event → Adapter → Event (unified) → DeviceManager → Executor (key
 | `core/config.py` | Tool shortcuts & multi-device input mappings, with persistence |
 | `core/executor.py` | Parses and executes shortcut combinations, with feedback triggers |
 | `core/feedback.py` | Feedback manager: sound, overlay, notification, LED, vibration |
+| `core/token_plan.py` | Huawei Cloud Token Plan / MaaS client — just fill in API Key |
+| `core/voice_llm.py` | Voice-to-LLM bridge + Prompt Refine: speech → optimized prompt → LLM → action |
 | `core/device_manager.py` | Manages all adapters and routes events to the executor |
 | `core/event.py` | Unified event abstraction layer (`DeviceType`, `InputType`, `Event`) |
 | `core/adapters/base.py` | Abstract base class for all adapters |
@@ -167,6 +171,41 @@ Copy `config.example.json` to `config.json` and edit:
 }
 ```
 
+**Token Plan (Huawei Cloud LLM)**
+
+Fill in your Huawei Cloud API Key in `config.json` to enable voice-to-LLM:
+
+```json
+{
+    "token_plan": {
+        "enabled": true,
+        "api_key": "YOUR_HW_CLOUD_API_KEY",
+        "endpoint": "https://maas-api.cn-north-4.myhuaweicloud.com",
+        "model": "glm-4.7",
+        "max_tokens": 2048,
+        "temperature": 0.7,
+        "refine_voice_text": true
+    }
+}
+```
+
+- `refine_voice_text` — Optional. When enabled, speech recognition results are first sent to the LLM for **Prompt Refine**: correcting homophones, accents, and technical terminology, while expanding vague requests (e.g., "write a sort" → "Implement quicksort in Python with input validation and detailed comments"). Falls back to raw text if refinement fails.
+
+Then configure your voice device with `"use_llm": true`:
+
+```json
+{
+    "id": "voice_mic",
+    "type": "voice",
+    "config": {
+        "mode": "command",
+        "language": "zh-CN",
+        "use_llm": true
+    },
+    "enabled": true
+}
+```
+
 ### Usage
 
 1. Install dependencies:
@@ -237,7 +276,10 @@ Contributors are welcome to co-build China's first open-source robot actuator ec
 - **系统托盘**: 程序运行后隐藏在系统托盘，右键图标随时切换 Vibe 工具。
 - **一键打包**: 提供 `build.py` 脚本，一键生成 `.exe` 或 `.app`。
 - **多外设输入**: 可插拔适配器架构，支持鼠标、键盘、手柄、蓝牙、红外遥控、HID、网络/IoT 设备。
-- **可视化配置工具**: 用浏览器打开 `config-tool.html`，图形化配置工具、外设和映射，无需后端。
+- **硬件反馈**: 操作触发或完成时即时反馈 —— 系统声音、屏幕浮窗、托盘通知、LED 指示灯、震动马达（硬件需外接）。
+- **语音接入大模型**: 语音识别结果可直接发送给华为云 Token Plan / MaaS（GLM / DeepSeek / Kimi），填入 API Key 后说"生成一个快排函数"，AI 自动帮你写代码。
+- **提示词优化（可选）**: 将口语化的语音输入转化为精准、结构化的高质量 Prompt。纠正同音字/口音/编程术语误识别，同时将模糊描述扩展为明确指令（如"写个排序"→"用Python实现快速排序，包含输入验证和注释"）。
+- **可视化配置工具**: 用浏览器打开 `config-tool.html`，图形化配置工具、外设、映射、反馈和 Token Plan，无需后端。
 
 ### 核心架构
 
@@ -248,7 +290,10 @@ Contributors are welcome to co-build China's first open-source robot actuator ec
 | 文件 | 说明 |
 |---|---|
 | `core/config.py` | 工具快捷键 & 多外设输入映射，支持持久化 |
-| `core/executor.py` | 解析并执行快捷键组合 |
+| `core/executor.py` | 解析并执行快捷键组合，集成反馈触发 |
+| `core/feedback.py` | 反馈管理器：声音、浮窗、通知、LED、震动 |
+| `core/token_plan.py` | 华为云 Token Plan / MaaS 客户端，填入 API Key 即可 |
+| `core/voice_llm.py` | 语音-大模型桥接器 + 提示词优化：语音 → 优化 Prompt → LLM → 动作 |
 | `core/device_manager.py` | 管理所有适配器，将事件路由到执行器 |
 | `core/event.py` | 统一事件抽象层 (`DeviceType`, `InputType`, `Event`) |
 | `core/adapters/base.py` | 适配器抽象基类 |
@@ -350,7 +395,7 @@ vibe-mouse/
 
 **方式一：可视化配置工具（推荐）**
 
-浏览器打开 `config-tool.html`，添加外设、编辑映射、切换工具，点击"Save Config"下载 `config.json` 放到项目目录即可。
+浏览器打开 `config-tool.html`，添加外设、编辑映射、切换工具、配置反馈和 Token Plan，点击"Save Config"下载 `config.json` 放到项目目录即可。
 
 **方式二：手动编辑 JSON**
 
@@ -366,6 +411,59 @@ vibe-mouse/
     "device_mappings": {
         "mouse_default": {"button8": "inline_edit", "button9": "toggle_chat", "middle": "accept_diff"},
         "xbox": {"a": "accept_diff", "b": "reject_diff", "x": "inline_edit", "y": "toggle_chat"}
+    }
+}
+```
+
+**Token Plan（华为云大模型接入）**
+
+在 `config.json` 中填入华为云 API Key，即可启用语音接入大模型：
+
+```json
+{
+    "token_plan": {
+        "enabled": true,
+        "api_key": "YOUR_HW_CLOUD_API_KEY",
+        "endpoint": "https://maas-api.cn-north-4.myhuaweicloud.com",
+        "model": "glm-4.7",
+        "max_tokens": 2048,
+        "temperature": 0.7,
+        "refine_voice_text": true
+    }
+}
+```
+
+- `refine_voice_text` — 可选。开启后，语音识别结果会先经大模型进行**提示词优化**：纠错（同音字/口音/术语误识别）+ 提示词工程（口语→精准指令，如"写个排序"→"用Python实现快速排序，包含输入验证和注释"）。优化失败时自动回退到原始文本。
+
+然后为语音设备配置 `"use_llm": true`：
+
+```json
+{
+    "id": "voice_mic",
+    "type": "voice",
+    "config": {
+        "mode": "command",
+        "language": "zh-CN",
+        "use_llm": true
+    },
+    "enabled": true
+}
+```
+
+**反馈配置**
+
+```json
+{
+    "feedback": {
+        "on_received": ["sound", "overlay"],
+        "on_success": ["sound"],
+        "on_error": ["sound", "notification", "overlay"],
+        "hardware": {
+            "led_enabled": false,
+            "vibration_enabled": false,
+            "serial_port": null,
+            "serial_baudrate": 9600
+        }
     }
 }
 ```

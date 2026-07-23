@@ -3,6 +3,7 @@ import os
 import platform
 from enum import Enum
 from .feedback import DEFAULT_FEEDBACK
+from .token_plan import DEFAULT_TOKEN_PLAN
 
 class VibeTool(Enum):
     TRAE = "trae"
@@ -134,6 +135,9 @@ class Config:
         # 反馈配置
         self.feedback = data.get("feedback", DEFAULT_FEEDBACK.copy())
 
+        # Token Plan 配置（华为云大模型接入）
+        self.token_plan = data.get("token_plan", DEFAULT_TOKEN_PLAN.copy())
+
         # 如果配置文件不存在或刚迁移，保存一次
         if not os.path.exists(self.config_file) or "mouse_mapping" in data:
             self.save_config()
@@ -145,6 +149,7 @@ class Config:
             "devices": self.devices,
             "device_mappings": self.device_mappings,
             "feedback": self.feedback,
+            "token_plan": self.token_plan,
         }
         with open(self.config_file, "w", encoding="utf-8") as f:
             json.dump(data, f, indent=4, ensure_ascii=False)
