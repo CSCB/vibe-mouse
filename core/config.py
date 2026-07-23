@@ -100,6 +100,13 @@ class Config:
         self.feedback = {}
         self.load_config()
 
+        # ===== Skill 覆盖层 =====
+        # 当 Skill 被激活时，覆盖层的快捷键/反馈会叠加在默认配置之上
+        # 退出 Skill 时清除覆盖层，恢复默认
+        self._skill_shortcut_override = {}   # {tool: {action: [keys]}}
+        self._skill_feedback_override = {}   # {on_received: [...], ...}
+        self._skill_device_overrides = []    # [{id, enabled}, ...]
+
     def load_config(self):
         """加载配置，保持向后兼容"""
         if os.path.exists(self.config_file):
@@ -138,6 +145,9 @@ class Config:
         # Token Plan 配置（华为云大模型接入）
         self.token_plan = data.get("token_plan", DEFAULT_TOKEN_PLAN.copy())
 
+        # Skill 配置（技能系统）
+        self.skills = data.get("skills", {"enabled": True, "fallback_action": "inline_edit", "inline_skills": []})
+
         # 如果配置文件不存在或刚迁移，保存一次
         if not os.path.exists(self.config_file) or "mouse_mapping" in data:
             self.save_config()
@@ -150,6 +160,7 @@ class Config:
             "device_mappings": self.device_mappings,
             "feedback": self.feedback,
             "token_plan": self.token_plan,
+            "skills": self.skills,
         }
         with open(self.config_file, "w", encoding="utf-8") as f:
             json.dump(data, f, indent=4, ensure_ascii=False)
@@ -169,7 +180,48 @@ class Config:
         return result
 
     def get_current_shortcuts(self):
+        """获取当前工具的快捷键（含 Skill 覆盖层）"""
+        base = self.shortcuts.get(self.current_tool, {})
+        # 应用 Skill 覆盖层
+        override = self._skill_shortcut_override.get(self.current_tool, {})
+        if override:
+            return {**base, **override}
+        return base
+
+    def get_base_shortcuts(self):
+        """获取当前工具的默认快捷键（不含 Skill 覆盖）"""
         return self.shortcuts.get(self.current_tool, {})
+
+    def get_current_feedback(self):
+        """获取当前反馈配置（含 Skill 覆盖层）"""
+        if self._skill_feedback_override:
+            return {**self.feedback, **self._skill_feedback_override}
+        return self.feedback
+
+    def get_base_feedback(self):
+        """获取默认反馈配置（不含 Skill 覆盖）"""
+        return self.feedback
+
+    # ===== Skill 覆盖层管理 =====
+    def apply_skill_overrides(self, shortcuts=None, feedback=None, devices=None):
+        """应用 Skill 的配置覆盖层"""
+        if shortcuts:
+            self._skill_shortcut_override = shortcuts
+        if feedback:
+            self._skill_feedback_override = feedback
+        if devices:
+            self._skill_device_overrides = devices
+
+    def clear_skill_overrides(self):
+        """清除 Skill 的配置覆盖层，恢复默认"""
+        self._skill_shortcut_override = {}
+        self._skill_feedback_override = {}
+        self._skill_device_overrides = []
+
+    @property
+    def has_skill_overrides(self) -> bool:
+        """是否当前有 Skill 覆盖层生效"""
+        return bool(self._skill_shortcut_override or self._skill_feedback_override or self._skill_device_overrides)
 
     # ---------- 向后兼容方法 ----------
     def get_action_for_button(self, button_name):

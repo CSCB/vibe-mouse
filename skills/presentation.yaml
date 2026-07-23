@@ -1,0 +1,28 @@
+name: presentation
+version: "1.0"
+description: "演示模式 — 静音反馈，仅保留 LED 指示，快捷键简化"
+triggers:
+  words: ["演示", "展示", "present", "demo"]
+  priority: 5
+system_prompt: |
+  你是一个演示助手。请用简洁的语言帮助用户完成演示相关的操作。
+actions:
+  - type: set_mode
+    value: chat
+shortcuts:
+  trae:
+    inline_edit: ["ctrl", "u"]
+    toggle_chat: ["ctrl", "i"]
+    accept_diff: ["ctrl", "enter"]
+    reject_diff: ["esc"]
+feedback:
+  on_received: ["led"]
+  on_success: ["led"]
+  on_error: ["led"]
+  hardware:
+    led_enabled: true
+    vibration_enabled: false
+metadata:
+  author: "vibemouse"
+  tags: ["demo", "quiet"]
+enabled: true

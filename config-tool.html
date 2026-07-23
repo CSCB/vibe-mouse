@@ -136,6 +136,24 @@ table.mt input:focus,table.mt select:focus{outline:none;border-color:var(--accen
       </div>
     </div>
 
+    <!-- Skills -->
+    <div class="card">
+      <h3>&#128736; Skills / 技能 <span class="badge">new</span></h3>
+      <p style="font-size:12px;color:var(--text2);margin-bottom:12px">
+        Skill = 完整工作模式：触发词/正则匹配 + 系统提示词 + 动作 + 快捷键覆盖 + 反馈覆盖 + 设备激活。一个 Skill 打包一套完整配置。
+      </p>
+      <div id="skillEditor"></div>
+      <div style="margin-top:10px;padding:10px;background:var(--surface2);border-radius:var(--radius);font-size:11px;color:var(--text2);line-height:1.6">
+        <b style="color:var(--text)">Skill 完整字段：</b><br>
+        name, version, description, triggers, system_prompt, actions,<br>
+        shortcuts <span style="opacity:.6">(覆盖快捷键)</span>,
+        feedback <span style="opacity:.6">(覆盖反馈)</span>,
+        devices <span style="opacity:.6">(激活设备)</span>,
+        metadata <span style="opacity:.6">(作者/标签)</span><br>
+        <span style="opacity:.7">在 Raw Config 中可直接编辑完整字段</span>
+      </div>
+    </div>
+
     <!-- Token Plan -->
     <div class="card">
       <h3>&#9889; Token Plan / 华为云大模型 <span class="badge">new</span></h3>
@@ -195,6 +213,56 @@ function defaults(){
       max_tokens:2048,
       temperature:0.7,
       refine_voice_text:false
+    },
+    skills:{
+      enabled:true,
+      fallback_action:"inline_edit",
+      inline_skills:[
+        {
+          name:"quick-code",
+          version:"1.0",
+          description:"快速生成代码片段 — 激活后自动打开内联编辑，语音直接生成代码",
+          triggers:{words:["生成代码","写个","帮我写","code","generate","写代码"],priority:10},
+          system_prompt:"你是一个资深程序员。用户通过语音输入，请直接输出代码，不要加 Markdown 代码块标记。只输出代码本身，不要解释。",
+          actions:[{type:"execute_action",value:"inline_edit"},{type:"set_mode",value:"paste"}],
+          feedback:{on_received:["sound"],on_success:["sound","overlay"],on_error:["sound","notification"]},
+          metadata:{author:"vibemouse",tags:["code","generate"]},
+          enabled:true
+        },
+        {
+          name:"code-review",
+          version:"1.0",
+          description:"代码审查模式 — 激活后打开聊天面板，LED 变蓝，语音用审查 prompt",
+          triggers:{words:["审查","review","检查代码","优化","refactor"],priority:10},
+          system_prompt:"你是一个资深代码审查专家。请审查用户提供的代码，指出：1. 潜在Bug 2. 性能瓶颈 3. 安全风险 4. 代码规范问题。给出具体的修改建议。",
+          actions:[{type:"execute_action",value:"toggle_chat"},{type:"set_mode",value:"chat"}],
+          feedback:{on_received:["sound","led"],on_success:["overlay"],on_error:["sound","notification","led"],hardware:{led_enabled:true}},
+          devices:[{id:"voice_mic",enabled:true}],
+          metadata:{author:"vibemouse",tags:["code","review"]},
+          enabled:true
+        },
+        {
+          name:"presentation",
+          version:"1.0",
+          description:"演示模式 — 静音反馈，仅保留 LED 指示，快捷键简化",
+          triggers:{words:["演示","展示","present","demo"],priority:5},
+          system_prompt:"你是一个演示助手。请用简洁的语言帮助用户完成演示相关的操作。",
+          actions:[{type:"set_mode",value:"chat"}],
+          shortcuts:{trae:{inline_edit:["ctrl","u"],toggle_chat:["ctrl","i"],accept_diff:["ctrl","enter"],reject_diff:["esc"]}},
+          feedback:{on_received:["led"],on_success:["led"],on_error:["led"],hardware:{led_enabled:true,vibration_enabled:false}},
+          metadata:{author:"vibemouse",tags:["demo","quiet"]},
+          enabled:true
+        },
+        {
+          name:"explain-code",
+          version:"1.0",
+          description:"解释代码逻辑和原理",
+          triggers:{words:["解释","explain","什么意思","原理","how"],priority:8},
+          system_prompt:"你是一个编程导师。请用简洁的中文解释代码的逻辑和关键知识点，让初学者也能理解。",
+          actions:[{type:"set_mode",value:"chat"}],
+          enabled:true
+        }
+      ]
     }
   };
 }
@@ -215,6 +283,7 @@ function render(){
   renderDevices();
   renderMappings();
   renderFeedback();
+  renderSkills();
   renderTokenPlan();
   refreshRaw();
 }
@@ -257,11 +326,25 @@ function renderMappings(){
     ${entries.length?`<table class="mt"><tr><th>Input</th><th>Action</th><th></th></tr>
     ${entries.map(([inp,act],i)=>`<tr>
       <td><input value="${inp}" data-d="${d.id}" data-i="${i}" data-f="input" style="font-family:monospace;font-size:12px"></td>
-      <td><select data-d="${d.id}" data-i="${i}" data-f="action">${ACTIONS.map(a=>`<option value="${a}" ${a===act?'selected':''}>${A_LABELS[a]}</option>`).join("")}</select></td>
+      <td><select data-d="${d.id}" data-i="${i}" data-f="action">${ACTIONS.map(a=>`<option value="${a}" ${a===act?'selected':''}>${A_LABELS[a]}</option>`).join("")}${_skillOpts(act)}</select></td>
       <td><button class="btn btn-d btn-s" style="padding:2px 6px" onclick="rmMap('${d.id}',${i})">\u2715</button></td>
     </tr>`).join("")}</table>`:'<div style="font-size:12px;color:var(--text2);padding:6px 0">No mappings</div>'}
     <button class="btn btn-o btn-s" style="margin-top:4px" onclick="addMapRow('${d.id}')">+ Add Mapping</button>`;
   }).join("");
+}
+
+function _skillOpts(cur){
+  const sk=cfg.skills||{};
+  const list=sk.inline_skills||[];
+  if(!list.length)return"";
+  const isSkill=cur&&cur.startsWith('skill:');
+  let h='<option value="" disabled '+(isSkill?'':'selected')+" style='color:var(--text2);font-size:11px'>--- Skills ---</option>";
+  list.forEach(s=>{
+    if(!s.enabled)return;
+    const v="skill:"+s.name;
+    h+='<option value="'+v+'" '+(v===cur?'selected':'')+'>'+"🎯"+' '+s.name+' (v'+(s.version||'1.0')+')</option>';
+  });
+  return h;
 }
 
 function refreshRaw(){
@@ -317,6 +400,123 @@ function updateFeedback(){
     serial_baudrate:parseInt(document.getElementById("fbBaud").value)||9600
   };
   persist();refreshRaw();
+}
+
+function renderSkills(){
+  const sk=cfg.skills||{};
+  const skills=sk.inline_skills||[];
+  let html='<div style="display:flex;flex-direction:column;gap:10px">';
+
+  skills.forEach((s,i)=>{
+    const on=s.enabled?'checked':'';
+    const words=(s.triggers&&s.triggers.words)?s.triggers.words.join(', '):'';
+    const modeVal=(s.actions&&s.actions[0]&&s.actions[0].type==='set_mode')?s.actions[0].value:'auto';
+    html+=`
+      <div style="background:var(--surface2);padding:12px;border-radius:8px;border:1px solid var(--border)">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+          <div style="display:flex;align-items:center;gap:8px">
+            <input type="checkbox" ${on} onchange="updateSkill(${i})" id="skEn_${i}">
+            <span style="font-weight:600;font-size:14px">${s.name}</span>
+            <span style="font-size:10px;color:var(--text2);background:var(--bg);padding:2px 6px;border-radius:4px">v${s.version||'1.0'}</span>
+          </div>
+          <button class="btn btn-o btn-s" onclick="deleteSkill(${i})">&#128465;</button>
+        </div>
+        <p style="font-size:12px;color:var(--text2);margin-bottom:8px">${s.description||''}</p>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
+          <div>
+            <label style="font-size:11px;color:var(--text2)">触发词 / Triggers</label>
+            <input id="skTri_${i}" value="${words}" placeholder="用逗号分隔"
+              style="width:100%;padding:5px 8px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:12px;margin-top:3px"
+              onchange="updateSkill(${i})">
+          </div>
+          <div>
+            <label style="font-size:11px;color:var(--text2)">模式 / Mode</label>
+            <select id="skMode_${i}" style="width:100%;padding:5px 8px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:12px;margin-top:3px"
+              onchange="updateSkill(${i})">
+              <option value="auto" ${modeVal==='auto'?'selected':''}>auto</option>
+              <option value="paste" ${modeVal==='paste'?'selected':''}>paste</option>
+              <option value="chat" ${modeVal==='chat'?'selected':''}>chat</option>
+              <option value="action" ${modeVal==='action'?'selected':''}>action</option>
+            </select>
+          </div>
+        </div>
+        <div>
+          <label style="font-size:11px;color:var(--text2)">System Prompt</label>
+          <textarea id="skPrompt_${i}" rows="2"
+            style="width:100%;padding:6px 10px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:12px;margin-top:3px;resize:vertical;font-family:inherit"
+            onchange="updateSkill(${i})">${s.system_prompt||''}</textarea>
+        </div>
+      </div>
+    `;
+  });
+
+  html+=`
+    <div style="display:flex;gap:8px;margin-top:4px">
+      <button class="btn btn-p" onclick="addSkill()">&#10133; Add Skill</button>
+      <button class="btn btn-o" onclick="loadBuiltinSkills()">&#128230; Load Built-in</button>
+    </div>
+  </div>`;
+
+  document.getElementById("skillEditor").innerHTML=html;
+}
+
+function updateSkill(idx){
+  const s=cfg.skills.inline_skills[idx];
+  s.enabled=document.getElementById(`skEn_${idx}`).checked;
+  const tri=document.getElementById(`skTri_${idx}`).value.split(',').map(x=>x.trim()).filter(Boolean);
+  s.triggers=s.triggers||{};
+  s.triggers.words=tri;
+  const mode=document.getElementById(`skMode_${idx}`).value;
+  s.actions=[{type:"set_mode",value:mode}];
+  s.system_prompt=document.getElementById(`skPrompt_${idx}`).value;
+  persist();refreshRaw();
+}
+
+function deleteSkill(idx){
+  if(!confirm('Delete this skill?'))return;
+  cfg.skills.inline_skills.splice(idx,1);
+  persist();renderSkills();refreshRaw();
+}
+
+function addSkill(){
+  cfg.skills.inline_skills.push({
+    name:"new-skill-"+(cfg.skills.inline_skills.length+1),
+    version:"1.0",
+    description:"",
+    triggers:{words:[],priority:5},
+    system_prompt:"",
+    actions:[{type:"set_mode",value:"auto"}],
+    enabled:true
+  });
+  persist();renderSkills();refreshRaw();
+}
+
+function loadBuiltinSkills(){
+  const builtins=[
+    {
+      name:"doc-writer",
+      version:"1.0",
+      description:"自动生成代码文档和注释",
+      triggers:{words:["写文档","注释","doc","documentation","说明"],priority:8},
+      system_prompt:"你是一个技术文档专家。请为用户的代码生成清晰的文档和注释，包含函数说明、参数描述和返回值说明。",
+      actions:[{type:"set_mode",value:"paste"}],
+      enabled:true
+    },
+    {
+      name:"debug-helper",
+      version:"1.0",
+      description:"帮助定位和修复代码Bug",
+      triggers:{words:["调试","bug","错误","报错","fix","debug"],priority:9},
+      system_prompt:"你是一个调试专家。请帮助用户分析和定位代码中的Bug，提供具体的修复方案和调试建议。",
+      actions:[{type:"set_mode",value:"chat"}],
+      enabled:true
+    }
+  ];
+  builtins.forEach(b=>{
+    const exists=cfg.skills.inline_skills.some(s=>s.name===b.name);
+    if(!exists) cfg.skills.inline_skills.push(b);
+  });
+  persist();renderSkills();refreshRaw();
 }
 
 function renderTokenPlan(){

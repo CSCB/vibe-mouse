@@ -6,6 +6,10 @@
 - B. 将回复意图解析为 VibeMouse 动作并执行
 - C. 将回复显示在浮窗中供用户参考
 
+Skill 支持两种触发方式：
+1. 外设按键映射为 "skill:<name>" — 直触发，激活 Skill 上下文供后续语音使用
+2. 语音文本匹配触发词 — 自动匹配最佳 Skill
+
 依赖：core/token_plan.py
 """
 
@@ -19,10 +23,14 @@ from .token_plan import TokenPlanClient
 class VoiceLLMBridge:
     """
     语音-大模型桥接器
-    连接语音识别结果与华为云大模型，实现"说一句话，AI 帮你操作/写代码"。
+    连接语音识别结果与华为云大模型，实现“说一句话，AI 帮你操作/写代码”。
 
     可选启用「语音文本优化」：先用大模型纠正语音识别中的口音/同音字/专业术语错误，
     再将优化后的文本用于后续处理（代码生成/动作执行/对话）。
+
+    支持「Skill 模式」：
+    - 外设按键激活的 Skill（executor.active_skill）优先级最高
+    - 语音触发词自动匹配作为备选
     """
 
     # 系统提示词：语音文本优化（纠错 + 提示词工程）
@@ -47,7 +55,7 @@ class VoiceLLMBridge:
         "输入：'看看这段代码有什么问题' → 输出：'请分析以下代码的性能瓶颈、潜在Bug和安全风险，并给出具体的优化建议'\n"
     )
 
-    # 系统提示词：对话/代码生成
+    # 系统提示词：对话/代码生成（默认兜底）
     DEFAULT_SYSTEM_PROMPT = (
         "你是一个 VibeMouse 智能助手。用户通过语音与你交互。\n"
         "你的任务是帮助用户高效编程，可以：\n"
@@ -59,7 +67,7 @@ class VoiceLLMBridge:
         "请用中文回复。"
     )
 
-    def __init__(self, token_plan_config: dict, executor=None):
+    def __init__(self, token_plan_config: dict, executor=None, skill_engine=None):
         self.client = TokenPlanClient(token_plan_config)
         self.executor = executor
         self.keyboard = Controller()
@@ -69,6 +77,9 @@ class VoiceLLMBridge:
 
         # 是否启用语音文本优化（从 token_plan 配置中读取）
         self.refine_enabled = token_plan_config.get("refine_voice_text", False)
+
+        # Skill 引擎（共享实例，由 executor 创建并传入）
+        self.skill_engine = skill_engine
 
     def is_ready(self) -> bool:
         """检查是否已配置好 Token Plan"""
@@ -145,7 +156,42 @@ class VoiceLLMBridge:
         # 第一步：可选优化语音文本
         def _proceed(processed_text: str):
             self._busy = True
-            print(f"[VoiceLLM] 发送给大模型: {processed_text}")
+
+            # ===== Skill 匹配 =====
+            matched_skill = None
+            skill_context = {}
+
+            # 优先级 1：executor 中由外设按键激活的 Skill
+            if self.executor and self.executor.active_skill:
+                matched_skill = self.executor.active_skill
+                skill_context = self.executor.active_skill_context
+                print(f"[VoiceLLM] 使用激活的 Skill: {matched_skill.name} - {matched_skill.description}")
+                # 使用完毕后清除激活状态（单次激活）
+                self.executor.clear_active_skill()
+
+            # 优先级 2：语音触发词自动匹配
+            if not matched_skill and self.skill_engine:
+                matched_skill = self.skill_engine.match(processed_text)
+                if matched_skill:
+                    print(f"[VoiceLLM] Skill 匹配: {matched_skill.name} - {matched_skill.description}")
+                    skill_context = self.skill_engine.apply_actions(matched_skill)
+
+            # Skill 可以覆盖 mode
+            if "mode" in skill_context:
+                mode = skill_context["mode"]
+
+            # 确定 system_prompt：Skill > 默认
+            if matched_skill and matched_skill.system_prompt:
+                system_prompt = matched_skill.system_prompt
+            else:
+                system_prompt = self.DEFAULT_SYSTEM_PROMPT
+
+            # 如果有 inject_text action，在消息前注入前缀
+            user_message = processed_text
+            if "prefix" in skill_context:
+                user_message = skill_context["prefix"] + "\n" + processed_text
+
+            print(f"[VoiceLLM] 发送给大模型: {user_message[:100]}...")
 
             def _callback(success: bool, result: str):
                 self._busy = False
@@ -160,9 +206,9 @@ class VoiceLLMBridge:
 
             # 第二步：用（优化后的）文本调用大模型
             self.client.chat_async(
-                user_message=processed_text,
+                user_message=user_message,
                 callback=_callback,
-                system_prompt=self.DEFAULT_SYSTEM_PROMPT
+                system_prompt=system_prompt
             )
 
         # 先优化，再处理

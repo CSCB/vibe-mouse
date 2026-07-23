@@ -7,6 +7,8 @@
 <a name="english"></a>
 ## English
 
+> **Beta / 预览版** — This project is under active development. Features, APIs, and configurations may change. Feedback and contributions are welcome.
+
 Core open-source Vibecoding interactive mouse project, belonging to a self-developed open-source system including the nation's first open-source robot actuator and stepless mobile intelligent monitoring solution.
 
 # Self-Developed Vibecoding Interactive Mouse 
@@ -35,7 +37,8 @@ Applicable to individual development, laboratory projects, smart device retrofit
 - **Hardware Feedback**: Instant feedback when actions are triggered or completed — via system sound, screen overlay, tray notification, LED indicator, or vibration motor (hardware requires custom setup).
 - **Voice-to-LLM Bridge**: Speech recognition results can be sent directly to Huawei Cloud Token Plan / MaaS (GLM / DeepSeek / Kimi). Just fill in your API Key and say "generate a quicksort function" — AI writes the code for you.
 - **Prompt Refine (Optional)**: Converts colloquial speech into precise, structured prompts before sending to the LLM. Corrects homophones, accents, and technical terminology, while expanding vague requests into actionable instructions.
-- **Visual Config Tool**: Open `config-tool.html` in a browser to configure tools, devices, mappings, feedback, and Token Plan visually — no backend required.
+- **Skill System (Complete Config Unit) (Beta)**: A Skill = a complete work mode. Bind any button/key to a Skill (`"skill:<name>"`) or let voice keywords auto-match. Each Skill can override shortcuts, feedback config, device activation, and system prompt — all in one package. Supports YAML/JSON files and built-in templates (quick-code, code-review, presentation, explain-code).
+- **Visual Config Tool**: Open `config-tool.html` in a browser to configure tools, devices, mappings, feedback, Token Plan, and Skills visually — no backend required.
 
 ### Core Architecture
 
@@ -50,6 +53,7 @@ Device Event → Adapter → Event (unified) → DeviceManager → Executor (key
 | `core/feedback.py` | Feedback manager: sound, overlay, notification, LED, vibration |
 | `core/token_plan.py` | Huawei Cloud Token Plan / MaaS client — just fill in API Key |
 | `core/voice_llm.py` | Voice-to-LLM bridge + Prompt Refine: speech → optimized prompt → LLM → action |
+| `core/skill_engine.py` | Skill parsing and matching engine — trigger words → system_prompt injection |
 | `core/device_manager.py` | Manages all adapters and routes events to the executor |
 | `core/event.py` | Unified event abstraction layer (`DeviceType`, `InputType`, `Event`) |
 | `core/adapters/base.py` | Abstract base class for all adapters |
@@ -84,6 +88,7 @@ vibe-mouse/
 │   │   ├── hid_adapter.py
 │   │   ├── network_adapter.py
 │   │   └── voice_adapter.py
+│   ├── skill_engine.py            # Skill parsing and matching engine
 │   ├── main.py                    # Entry point
 │   └── system_tray.py             # System tray
 ├── actuator/                      # Open-source robot actuator module
@@ -106,6 +111,9 @@ vibe-mouse/
 │   ├── software/
 │   ├── api/
 │   └── faq/
+├── skills/                        # Skill files (YAML/JSON)
+│   ├── quick-code.yaml
+│   └── code-review.yaml
 ├── config-tool.html               # Visual config tool (browser-based, no backend)
 ├── config.example.json            # Example multi-device config
 ├── build.py                       # Build script
@@ -206,6 +214,131 @@ Then configure your voice device with `"use_llm": true`:
 }
 ```
 
+**Skill System**
+
+A Skill is a **complete configuration unit** — not just a prompt, but an entire work mode. When activated, a Skill can:
+
+- **Execute actions** (press shortcuts, switch tools, set processing mode)
+- **Override shortcuts** (change key bindings per tool for this mode)
+- **Override feedback** (change sound/LED/overlay/vibration behavior)
+- **Activate devices** (enable specific input devices like voice mic)
+- **Inject system prompt** (set the LLM persona for voice input)
+
+**Trigger methods:**
+
+1. **Device binding** (`"skill:<name>"` in mappings) — any button/key directly triggers a Skill, applying all its config overrides.
+2. **Voice matching** (trigger words/regex) — when voice input matches a Skill's keywords, the Skill's `system_prompt` is injected into the LLM call.
+
+When a Skill is deactivated (by activating another Skill or manually exiting), all overrides are removed and default config is restored.
+
+*Skill File Format (YAML or JSON)*
+
+```yaml
+name: code-review
+version: "1.0"
+description: "Code review mode — opens chat panel, LED on, review prompt"
+triggers:
+  words: ["review", "check code", "refactor"]
+  priority: 10
+system_prompt: |
+  You are a senior code reviewer. Analyze for bugs, performance, security, and style.
+actions:
+  - type: execute_action      # Press toggle_chat shortcut
+    value: toggle_chat
+  - type: set_mode            # Voice response mode: paste/chat/action/auto
+    value: chat
+shortcuts:                    # Override shortcuts for this mode (optional)
+  trae:
+    inline_edit: ["ctrl", "u"]
+    toggle_chat: ["ctrl", "i"]
+feedback:                     # Override feedback config (optional)
+  on_received: ["sound", "led"]
+  on_success: ["overlay"]
+  on_error: ["sound", "notification", "led"]
+  hardware:
+    led_enabled: true
+devices:                      # Auto-enable devices (optional)
+  - id: voice_mic
+    enabled: true
+metadata:                     # Author, tags, etc. (optional)
+  author: "vibemouse"
+  tags: ["code", "review"]
+enabled: true
+```
+
+| Field | Description |
+|---|---|
+| `name` | Unique skill identifier (e.g., `quick-code`) |
+| `version` | Semantic version string (e.g., `"1.0"`, `"1.2.3"`) |
+| `description` | Human-readable description shown in the config tool |
+| `triggers.words` | List of trigger keywords; if any word is contained in the voice text, the skill matches |
+| `triggers.regex` | Optional regex pattern for advanced matching |
+| `triggers.priority` | Integer; higher priority wins when multiple skills match |
+| `system_prompt` | The system prompt injected when this skill is matched |
+| `actions` | Actions executed on activation: `set_mode` (auto/paste/chat/action), `execute_action` (press a native shortcut), `set_tool` (switch Vibe tool), `inject_text` (prepend text to voice message). |
+| `shortcuts` | **(Optional)** Override key bindings per tool for this Skill mode. Format: `{tool: {action: [keys]}}` |
+| `feedback` | **(Optional)** Override feedback config (sound/LED/overlay/vibration) for this Skill mode |
+| `devices` | **(Optional)** Auto-enable input devices when Skill is activated |
+| `metadata` | **(Optional)** Author, tags, and other metadata |
+| `enabled` | Whether this skill is active |
+
+*Configuration in `config.json`*
+
+```json
+{
+    "skills": {
+        "enabled": true,
+        "fallback_action": "inline_edit",
+        "skill_files": [
+            "skills/quick-code.yaml",
+            "skills/code-review.yaml"
+        ],
+        "inline_skills": [
+            {
+                "name": "explain-code",
+                "version": "1.0",
+                "description": "Explain code logic",
+                "triggers": {"words": ["explain", "what does this do"], "priority": 8},
+                "system_prompt": "You are a programming tutor. Explain code in simple terms.",
+                "actions": [{"type": "set_mode", "value": "chat"}],
+                "enabled": true
+            }
+        ]
+    }
+}
+```
+
+- `skill_files` — Load skills from external YAML/JSON files (recommended for sharing and versioning)
+- `inline_skills` — Define skills directly inside `config.json` (recommended for quick customization via the config tool)
+
+*Binding a Skill to a device button*
+
+In `device_mappings`, use the `"skill:<name>"` format as the action value:
+```json
+{"mouse_default": {"button9": "skill:code-review"}}
+```
+This maps the mouse side button to the `code-review` Skill — pressing it activates the Skill's system prompt and executes its defined actions.
+
+*Built-in Skills*
+
+| Skill | Triggers | Mode | Description |
+|---|---|---|---|
+| `quick-code` | "generate code", "write", "code" | `paste` | Directly outputs code without explanation |
+| `code-review` | "review", "check code", "refactor" | `chat` | Reviews code for bugs, performance, and security |
+| `doc-writer` | "write docs", "comments", "documentation" | `paste` | Generates function docs and comments |
+| `explain-code` | "explain", "how", "meaning" | `chat` | Explains code logic in beginner-friendly terms |
+| `presentation` | "demo", "present", "展示" | `chat` | Silent feedback (LED only), simplified shortcuts |
+| `debug-helper` | "debug", "bug", "error", "fix" | `chat` | Helps locate and fix bugs |
+
+*How it works*
+
+1. Voice input is recognized
+2. (Optional) Prompt Refine optimizes the text
+3. **Skill Engine** matches the text against all enabled skills (by trigger words → regex → priority)
+4. If a skill matches, its `system_prompt` replaces the default prompt; its `actions` set the mode (paste/chat/action)
+5. The optimized text + skill system prompt are sent to the LLM
+6. The response is handled according to the skill's mode
+
 ### Usage
 
 1. Install dependencies:
@@ -251,6 +384,8 @@ Contributors are welcome to co-build China's first open-source robot actuator ec
 <a name="中文"></a>
 ## 中文
 
+> **Beta / 预览版** — 本项目处于活跃开发阶段，功能、API 和配置可能变动。欢迎反馈和贡献。
+
 核心开源 Vibecoding 交互鼠标项目，属于包含全国首个开源机器人执行器及无级移动智能监控解决方案的自研开源系统的一部分。
 
 # 自研 Vibecoding 交互鼠标
@@ -279,7 +414,8 @@ Contributors are welcome to co-build China's first open-source robot actuator ec
 - **硬件反馈**: 操作触发或完成时即时反馈 —— 系统声音、屏幕浮窗、托盘通知、LED 指示灯、震动马达（硬件需外接）。
 - **语音接入大模型**: 语音识别结果可直接发送给华为云 Token Plan / MaaS（GLM / DeepSeek / Kimi），填入 API Key 后说"生成一个快排函数"，AI 自动帮你写代码。
 - **提示词优化（可选）**: 将口语化的语音输入转化为精准、结构化的高质量 Prompt。纠正同音字/口音/编程术语误识别，同时将模糊描述扩展为明确指令（如"写个排序"→"用Python实现快速排序，包含输入验证和注释"）。
-- **可视化配置工具**: 用浏览器打开 `config-tool.html`，图形化配置工具、外设、映射、反馈和 Token Plan，无需后端。
+- **Skill 技能系统（完整配置单元）（Beta）**: 一个 Skill = 一套完整工作模式。任意按键可绑定 Skill（`"skill:<name>"`），也可语音关键词自动匹配。每个 Skill 可覆盖快捷键、反馈配置、设备激活和系统提示词——全部打包在一起。支持 YAML/JSON 文件和内置模板（quick-code、code-review、presentation、explain-code）。
+- **可视化配置工具**: 用浏览器打开 `config-tool.html`，图形化配置工具、外设、映射、反馈、Token Plan 和 Skills，无需后端。
 
 ### 核心架构
 
@@ -294,6 +430,7 @@ Contributors are welcome to co-build China's first open-source robot actuator ec
 | `core/feedback.py` | 反馈管理器：声音、浮窗、通知、LED、震动 |
 | `core/token_plan.py` | 华为云 Token Plan / MaaS 客户端，填入 API Key 即可 |
 | `core/voice_llm.py` | 语音-大模型桥接器 + 提示词优化：语音 → 优化 Prompt → LLM → 动作 |
+| `core/skill_engine.py` | Skill 解析与匹配引擎 — 触发词 → system_prompt 注入 |
 | `core/device_manager.py` | 管理所有适配器，将事件路由到执行器 |
 | `core/event.py` | 统一事件抽象层 (`DeviceType`, `InputType`, `Event`) |
 | `core/adapters/base.py` | 适配器抽象基类 |
@@ -328,6 +465,7 @@ vibe-mouse/
 │   │   ├── hid_adapter.py
 │   │   ├── network_adapter.py
 │   │   └── voice_adapter.py
+│   ├── skill_engine.py            # Skill 解析与匹配引擎
 │   ├── main.py                    # 入口
 │   └── system_tray.py             # 系统托盘
 ├── actuator/                      # 开源机器人执行器模块
@@ -350,6 +488,9 @@ vibe-mouse/
 │   ├── software/
 │   ├── api/
 │   └── faq/
+├── skills/                        # Skill 文件（YAML/JSON）
+│   ├── quick-code.yaml
+│   └── code-review.yaml
 ├── config-tool.html               # 可视化配置工具（浏览器打开，无需后端）
 ├── config.example.json            # 多外设配置示例
 ├── build.py                       # 打包脚本
@@ -467,6 +608,132 @@ vibe-mouse/
     }
 }
 ```
+
+**Skill 技能系统**
+
+Skill 是**完整的配置单元**——不只是一个提示词，而是一整套工作模式。激活后，Skill 可以：
+
+- **执行动作**（按快捷键、切换工具、设置处理模式）
+- **覆盖快捷键**（为当前模式修改各工具的按键绑定）
+- **覆盖反馈**（修改声音/LED/浮窗/震动行为）
+- **激活设备**（启用指定输入设备，如麦克风）
+- **注入系统提示词**（设置语音输入的 LLM 人设）
+
+**触发方式：**
+
+1. **外设绑定**（映射中使用 `"skill:<name>"`）— 任意按键直接触发 Skill，应用其所有配置覆盖
+2. **语音匹配**（触发词/正则）— 语音输入匹配到 Skill 关键词时，注入对应的 `system_prompt`
+
+退出 Skill 时（激活另一个 Skill 或手动退出），所有覆盖配置自动移除，恢复默认配置。
+
+*Skill 文件格式（YAML 或 JSON）*
+
+```yaml
+name: code-review
+version: "1.0"
+description: "代码审查模式 — 激活后打开聊天面板，LED 变蓝，语音用审查 prompt"
+triggers:
+  words: ["审查", "review", "检查代码", "优化"]
+  priority: 10
+system_prompt: |
+  你是一个资深代码审查专家。请审查用户提供的代码，指出：
+  1. 潜在Bug  2. 性能瓶颈  3. 安全风险  4. 代码规范问题
+actions:
+  - type: execute_action      # 按下 toggle_chat 快捷键
+    value: toggle_chat
+  - type: set_mode            # 语音回复模式：paste/chat/action/auto
+    value: chat
+shortcuts:                    # 覆盖此模式下的快捷键（可选）
+  trae:
+    inline_edit: ["ctrl", "u"]
+    toggle_chat: ["ctrl", "i"]
+feedback:                     # 覆盖此模式下的反馈配置（可选）
+  on_received: ["sound", "led"]
+  on_success: ["overlay"]
+  on_error: ["sound", "notification", "led"]
+  hardware:
+    led_enabled: true
+devices:                      # 自动启用的设备（可选）
+  - id: voice_mic
+    enabled: true
+metadata:                     # 作者、标签等（可选）
+  author: "vibemouse"
+  tags: ["code", "review"]
+enabled: true
+```
+
+| 字段 | 说明 |
+|---|---|
+| `name` | Skill 唯一标识（如 `quick-code`） |
+| `version` | 语义化版本号（如 `"1.0"`、`"1.2.3"`） |
+| `description` | 人类可读的描述，显示在配置工具中 |
+| `triggers.words` | 触发关键词列表；语音文本包含任一关键词即匹配 |
+| `triggers.regex` | 可选正则表达式，用于高级匹配 |
+| `triggers.priority` | 整数，多个 Skill 同时匹配时优先级高的生效 |
+| `system_prompt` | 匹配成功后注入的系统提示词 |
+| `actions` | 激活时执行的动作：`set_mode`（auto/paste/chat/action）、`execute_action`（按下原生快捷键）、`set_tool`（切换 Vibe 工具）、`inject_text`（在语音消息前注入文本） |
+| `shortcuts` | **（可选）** 覆盖此 Skill 模式下各工具的快捷键。格式：`{tool: {action: [keys]}}` |
+| `feedback` | **（可选）** 覆盖此 Skill 模式下的反馈配置（声音/LED/浮窗/震动） |
+| `devices` | **（可选）** Skill 激活时自动启用的输入设备 |
+| `metadata` | **（可选）** 作者、标签等元信息 |
+| `enabled` | 是否启用该 Skill |
+
+*在 `config.json` 中配置*
+
+```json
+{
+    "skills": {
+        "enabled": true,
+        "fallback_action": "inline_edit",
+        "skill_files": [
+            "skills/quick-code.yaml",
+            "skills/code-review.yaml"
+        ],
+        "inline_skills": [
+            {
+                "name": "explain-code",
+                "version": "1.0",
+                "description": "解释代码逻辑和原理",
+                "triggers": {"words": ["解释", "什么意思", "原理"], "priority": 8},
+                "system_prompt": "你是一个编程导师。请用简洁的中文解释代码的逻辑和关键知识点。",
+                "actions": [{"type": "set_mode", "value": "chat"}],
+                "enabled": true
+            }
+        ]
+    }
+}
+```
+
+- `skill_files` — 从外部 YAML/JSON 文件加载 Skill（推荐用于共享和版本管理）
+- `inline_skills` — 直接在 `config.json` 中定义 Skill（推荐通过配置工具快速自定义）
+
+*将 Skill 绑定到外设按键*
+
+在 `device_mappings` 中使用 `"skill:<name>"` 格式作为动作值：
+```json
+{"mouse_default": {"button9": "skill:code-review"}}
+```
+这样鼠标侧键就绑定到了 `code-review` Skill — 按下后激活该 Skill 的 system_prompt 并执行其定义的动作。
+
+*内置 Skill 模板*
+
+| Skill | 触发词 | 模式 | 说明 |
+|---|---|---|---|
+| `quick-code` | "生成代码"、"写个"、"code" | `paste` | 直接输出代码，不加解释 |
+| `code-review` | "审查"、"检查代码"、"优化" | `chat` | 审查代码的 Bug、性能和安全问题 |
+| `doc-writer` | "写文档"、"注释"、"documentation" | `paste` | 生成函数文档和注释 |
+| `explain-code` | "解释"、"什么意思"、"原理" | `chat` | 用通俗易懂的方式解释代码逻辑 |
+| `presentation` | "演示"、"展示"、"demo" | `chat` | 静音反馈（仅 LED），简化快捷键 |
+| `debug-helper` | "调试"、"bug"、"报错"、"fix" | `chat` | 帮助定位和修复代码 Bug |
+
+*工作流程*
+
+1. 语音输入被识别
+2. （可选）提示词优化处理语音文本
+3. **Skill 引擎**将文本与所有启用的 Skill 进行匹配（触发词 → 正则 → 优先级）
+4. 若匹配成功，使用该 Skill 的 `system_prompt` 替换默认提示词；其 `actions` 设置处理模式（paste/chat/action）
+5. 优化后的文本 + Skill 系统提示词发送给大模型
+6. 按照 Skill 设定的模式处理模型回复
 
 ### 使用方法
 

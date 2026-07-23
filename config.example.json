@@ -5,7 +5,8 @@
             "inline_edit": ["ctrl", "u"],
             "toggle_chat": ["ctrl", "i"],
             "accept_diff": ["ctrl", "enter"],
-            "reject_diff": ["esc"]
+            "reject_diff": ["esc"],
+            "voice_input": ["alt", "v"]
         }
     },
     "devices": [
@@ -23,100 +24,21 @@
                 "deadzone": 0.15
             },
             "enabled": true
-        },
-        {
-            "id": "bt_phone",
-            "type": "bluetooth",
-            "config": {
-                "mode": "ble",
-                "mac_address": "AA:BB:CC:DD:EE:FF",
-                "notify_uuid": "0000ffe1-0000-1000-8000-00805f9b34fb"
-            },
-            "enabled": false
-        },
-        {
-            "id": "voice_cmd",
-            "type": "voice",
-            "config": {
-                "mode": "command",
-                "language": "zh-CN",
-                "use_llm": true,
-                "command_phrases": {
-                    "accept_diff": ["接受", "采纳", "同意", "yes", "accept", "ok"],
-                    "reject_diff": ["拒绝", "取消", "不要", "no", "reject", "cancel"],
-                    "inline_edit": ["生成", "编辑", "写入", "generate", "edit"],
-                    "toggle_chat": ["面板", "聊天", "对话", "chat", "panel"]
-                }
-            },
-            "enabled": false
-        },
-        {
-            "id": "tv_remote",
-            "type": "ir_remote",
-            "config": {
-                "mode": "serial",
-                "port": "COM3",
-                "baudrate": 9600,
-                "remote_type": "tv"
-            },
-            "enabled": false
-        },
-        {
-            "id": "stream_deck",
-            "type": "hid_generic",
-            "config": {
-                "backend": "hidapi",
-                "vendor_id": 4057,
-                "product_id": 96
-            },
-            "enabled": false
-        },
-        {
-            "id": "mqtt_bridge",
-            "type": "network",
-            "config": {
-                "protocol": "mqtt",
-                "broker": "localhost",
-                "port": 1883,
-                "topic": "vibemouse/input"
-            },
-            "enabled": false
         }
     ],
     "device_mappings": {
         "mouse_default": {
             "button8": "inline_edit",
-            "button9": "toggle_chat",
+            "button9": "skill:code-review",
             "middle": "accept_diff"
         },
         "xbox_controller": {
             "a": "accept_diff",
             "b": "reject_diff",
-            "x": "inline_edit",
-            "y": "toggle_chat",
+            "x": "skill:quick-code",
+            "y": "skill:presentation",
             "lb": "accept_diff",
             "rb": "reject_diff"
-        },
-        "bt_phone": {
-            "hook": "toggle_chat",
-            "vol_up": "accept_diff",
-            "vol_down": "reject_diff"
-        },
-        "tv_remote": {
-            "power": "inline_edit",
-            "ok": "accept_diff",
-            "back": "reject_diff",
-            "menu": "toggle_chat"
-        },
-        "stream_deck": {
-            "report_byte0_01": "inline_edit",
-            "report_byte0_02": "toggle_chat",
-            "report_byte0_03": "accept_diff",
-            "report_byte0_04": "reject_diff"
-        },
-        "mqtt_bridge": {
-            "button_a": "inline_edit",
-            "button_b": "accept_diff"
         }
     },
     "feedback": {
@@ -138,5 +60,32 @@
         "max_tokens": 2048,
         "temperature": 0.7,
         "refine_voice_text": false
+    },
+    "skills": {
+        "enabled": true,
+        "fallback_action": "inline_edit",
+        "skill_files": [
+            "skills/quick-code.yaml",
+            "skills/code-review.yaml",
+            "skills/presentation.yaml"
+        ],
+        "inline_skills": [
+            {
+                "name": "explain-code",
+                "version": "1.0",
+                "description": "解释代码逻辑和原理",
+                "triggers": {
+                    "words": ["解释", "explain", "什么意思", "原理", "how"],
+                    "priority": 8
+                },
+                "system_prompt": "你是一个编程导师。请用简洁的中文解释代码的逻辑和关键知识点，让初学者也能理解。",
+                "actions": [
+                    {"type": "execute_action", "value": "toggle_chat"},
+                    {"type": "set_mode", "value": "chat"}
+                ],
+                "metadata": {"author": "vibemouse", "tags": ["explain", "learn"]},
+                "enabled": true
+            }
+        ]
     }
 }

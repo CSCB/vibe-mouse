@@ -61,6 +61,10 @@ class FeedbackManager:
         self._last_feedback_time = 0
         self._debounce_interval = 0.15  # 防抖间隔，避免连续触发
 
+    def update_config(self, config: Dict[str, Any]):
+        """动态更新反馈配置（Skill 激活/退出时调用）"""
+        self.config = config
+
     # ------------------------------------------------------------------
     # 注册外部处理器
     # ------------------------------------------------------------------

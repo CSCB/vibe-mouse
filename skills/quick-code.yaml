@@ -1,0 +1,22 @@
+name: quick-code
+version: "1.0"
+description: "快速生成代码片段 — 激活后自动打开内联编辑，语音直接生成代码"
+triggers:
+  words: ["生成代码", "写个", "帮我写", "code", "generate", "写代码"]
+  priority: 10
+system_prompt: |
+  你是一个资深程序员。用户通过语音输入，请直接输出代码，不要加 Markdown 代码块标记。
+  只输出代码本身，不要解释。
+actions:
+  - type: execute_action
+    value: inline_edit
+  - type: set_mode
+    value: paste
+feedback:
+  on_received: ["sound"]
+  on_success: ["sound", "overlay"]
+  on_error: ["sound", "notification"]
+metadata:
+  author: "vibemouse"
+  tags: ["code", "generate"]
+enabled: true
