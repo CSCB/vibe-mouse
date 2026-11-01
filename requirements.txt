@@ -1,40 +1,48 @@
-# 核心依赖 / Core dependencies
-pynput==1.7.6
-pystray==0.19.5
-Pillow==10.2.0
-pyinstaller==6.4.0
+# ============================================================
+# Vibe Mouse 依赖清单 / Dependencies
+# ============================================================
 
-# 窗口检测 / Window detection
-pywin32==306          # Windows 窗口焦点检测
-psutil==5.9.8         # 进程信息获取
+# ---- 核心依赖 / Core ----
+pynput==1.7.6            # 鼠标 / 键盘监听与控制
+PyQt5>=5.15              # 桌面 UI（桌宠 / 设置面板 / 控制面板 / 反馈浮窗 / 系统托盘）
+Pillow>=10.0             # 桌宠素材生成
 
-# 外设适配器可选依赖 / Optional adapter dependencies
+# ---- 语音识别 / Speech Recognition ----
+funasr>=1.0              # FunASR（SenseVoiceSmall 本地离线识别）
+# 说明：funasr 依赖 torch，pip 会自动安装 CPU 版；如需 GPU 加速请自行安装对应 CUDA 版本
+
+# ---- 录音与音频处理 / Audio ----
+sounddevice>=0.4.6       # 录音
+numpy>=1.24              # 音频数据 / 数值处理
+
+# ---- 蓝牙继电器 / BLE Relay ----
+bleak>=0.21              # BLE 继电器（多色灯光）
+
+# ---- 窗口检测 / Window Detection (Windows) ----
+pywin32==306             # 前台窗口焦点检测
+psutil>=5.9              # 进程信息
+
+# ---- 打包 / Packaging ----
+pyinstaller>=6.0         # 一键打包 exe / app
+
+# ---- 可选：外设适配器 / Optional Adapter Dependencies ----
 # 游戏手柄 / Gamepad
 # pygame
 
-# 蓝牙 BLE / Bluetooth BLE
-# bleak
-
-# 蓝牙 Classic / Bluetooth Classic
+# 经典蓝牙 / Bluetooth Classic
 # pybluez
 
 # 串口红外 / Serial IR
 # pyserial
 
-# Broadlink WiFi 红外
+# Broadlink WiFi 红外 / Broadlink IR
 # broadlink
 
-# HID 设备 / HID devices
+# HID 设备 / HID Devices
 # hidapi
-# pywinusb  # Windows only
+# pywinusb          # Windows only
 
-# 网络/IoT / Network & IoT
+# 网络 / IoT / Network
 # paho-mqtt
 # websockets
 # flask
-
-# 语音输入 / Voice input
-# SpeechRecognition
-# pyaudio
-# pocketsphinx    # 离线识别 (可选)
-# pvporcupine     # 唤醒词模式 (可选，需 access_key)
