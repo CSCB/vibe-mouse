@@ -1,0 +1,1 @@
+# Vibe Mouse - Core Package

@@ -28,6 +28,9 @@ class DeviceManager:
         self.executor = executor
         self.adapters: Dict[str, BaseAdapter] = {}
         self._lock = threading.Lock()
+        # 动作触发回调（可选）：与 MouseListener.action_callback 对齐，
+        # 用于驱动桌宠动画等 UI 反馈
+        self.on_action: Optional[Callable[[str], None]] = None
 
     def register_device(self, device_type: str, device_id: str, device_config: dict):
         """
@@ -124,3 +127,9 @@ class DeviceManager:
             args=(action,),
             daemon=True
         ).start()
+
+        if self.on_action:
+            try:
+                self.on_action(action)
+            except Exception as e:
+                print(f"[DeviceManager] on_action callback error / 回调异常: {e}")

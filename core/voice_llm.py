@@ -64,6 +64,9 @@ class VoiceLLMBridge:
         "3. 当用户说'生成'、'编辑'、'聊天'、'接受'、'拒绝'等意图时，"
         "在回复末尾追加一行动作标记：[ACTION:inline_edit] 等\n"
         "可用动作标记：[ACTION:inline_edit] [ACTION:toggle_chat] [ACTION:accept_diff] [ACTION:reject_diff]\n"
+        "继电器控制标记（用户提到通道/继电器时使用）："
+        "[ACTION:relay_on_1] [ACTION:relay_off_1] [ACTION:relay_on_2] [ACTION:relay_off_2] "
+        "[ACTION:relay_on_3] [ACTION:relay_off_3]\n"
         "请用中文回复。"
     )
 
@@ -253,9 +256,9 @@ class VoiceLLMBridge:
                     self._on_response(clean_text)
 
     def _extract_action(self, text: str) -> str:
-        """从回复中提取动作标记，如 [ACTION:inline_edit]"""
+        """从回复中提取动作标记，如 [ACTION:inline_edit] / [ACTION:relay:on_1]"""
         import re
-        match = re.search(r'\[ACTION:(\w+)\]', text)
+        match = re.search(r'\[ACTION:\s*([\w:]+)\s*\]', text)
         if match:
             return match.group(1)
         return ""
@@ -275,6 +278,13 @@ class VoiceLLMBridge:
         text_lower = text.lower().strip()
 
         local_map = {
+            # 继电器控制（前插，优先匹配，避免被通用关键词拦截）
+            "relay_on_1": ["打开通道1", "打开通道一", "开通道1", "开通道一", "继电器1开", "继电器一开"],
+            "relay_on_2": ["打开通道2", "打开通道二", "开通道2", "开通道二", "继电器2开", "继电器二开"],
+            "relay_on_3": ["打开通道3", "打开通道三", "开通道3", "开通道三", "继电器3开", "继电器三开"],
+            "relay_off_1": ["关闭通道1", "关闭通道一", "关通道1", "关通道一", "继电器1关", "继电器一关"],
+            "relay_off_2": ["关闭通道2", "关闭通道二", "关通道2", "关通道二", "继电器2关", "继电器二关"],
+            "relay_off_3": ["关闭通道3", "关闭通道三", "关通道3", "关通道三", "继电器3关", "继电器三关"],
             "inline_edit": ["生成", "编辑", "写入", "代码", "generate", "edit", "code"],
             "toggle_chat": ["聊天", "面板", "对话", "chat", "panel", "talk"],
             "accept_diff": ["接受", "采纳", "同意", "yes", "accept", "ok"],
@@ -292,25 +302,212 @@ class VoiceLLMBridge:
         print(f"[VoiceLLM] 未匹配到本地动作: {text}")
 
     # ------------------------------------------------------------------
-    # 键盘输入辅助
+    # 键盘输入辅助（剪贴板 + Ctrl+V，避免逐字输入丢键）
     # ------------------------------------------------------------------
     def _type_text(self, text: str):
-        """将文本模拟键盘输入到当前光标位置"""
+        """
+        将文本粘贴到当前光标位置。
+
+        使用「剪贴板 + Ctrl+V」方式，比逐字 keyboard.type() 快且可靠，
+        尤其适合中文和多行文本。
+        """
         if not text:
             return
         print(f"[VoiceLLM] 粘贴文本 ({len(text)} 字符)")
         try:
-            # 先粘贴到剪贴板再 Ctrl+V 更可靠，但这里用直接输入
-            # 对于多行文本，逐行输入
-            for char in text:
-                if char == '\n':
-                    self.keyboard.press(Key.enter)
-                    self.keyboard.release(Key.enter)
-                else:
-                    self.keyboard.type(char)
-                time.sleep(0.005)  # 轻微延迟避免丢键
+            # 保存当前剪贴板内容
+            old_clip = self._get_clipboard()
+
+            # 写入新文本到剪贴板
+            if not self._set_clipboard(text):
+                print("[VoiceLLM] 剪贴板写入失败，回退到逐字输入")
+                self._type_text_fallback(text)
+                return
+
+            # 等待剪贴板就绪
+            time.sleep(0.08)
+
+            # 模拟 Ctrl+V 粘贴
+            self.keyboard.press(Key.ctrl)
+            self.keyboard.press('v')
+            time.sleep(0.05)
+            self.keyboard.release('v')
+            self.keyboard.release(Key.ctrl)
+
+            # 等待粘贴完成
+            time.sleep(0.1)
+
+            # 恢复原始剪贴板内容
+            if old_clip:
+                self._set_clipboard(old_clip)
+
+            print("[VoiceLLM] 文本已粘贴")
         except Exception as e:
-            print(f"[VoiceLLM] 输入文本失败: {e}")
+            print(f"[VoiceLLM] 粘贴失败: {e}，回退到逐字输入")
+            self._type_text_fallback(text)
+
+    def _type_text_fallback(self, text: str):
+        """回退方案：逐字符模拟键盘输入（慢但兼容性好）"""
+        for char in text:
+            if char == '\n':
+                self.keyboard.press(Key.enter)
+                self.keyboard.release(Key.enter)
+            else:
+                self.keyboard.type(char)
+            time.sleep(0.005)
+
+    def _set_clipboard(self, text: str) -> bool:
+        """
+        设置剪贴板文本（线程安全，不依赖 tkinter）。
+
+        Windows: 使用 Win32 API (ctypes)
+        macOS:   使用 pbcopy 命令
+        Linux:   使用 xclip 命令
+        """
+        import platform
+        system = platform.system()
+
+        if system == "Windows":
+            return self._set_clipboard_win32(text)
+        elif system == "Darwin":
+            import subprocess
+            try:
+                process = subprocess.Popen(['pbcopy'], stdin=subprocess.PIPE)
+                process.communicate(text.encode('utf-8'))
+                return True
+            except Exception:
+                return False
+        else:  # Linux
+            import subprocess
+            try:
+                process = subprocess.Popen(['xclip', '-selection', 'clipboard'],
+                                           stdin=subprocess.PIPE)
+                process.communicate(text.encode('utf-8'))
+                return True
+            except Exception:
+                return False
+
+    def _set_clipboard_win32(self, text: str) -> bool:
+        """Windows: 使用 Win32 API 设置剪贴板（完全线程安全）"""
+        import ctypes
+
+        CF_UNICODETEXT = 13
+        GMEM_MOVEABLE = 0x0002
+
+        kernel32 = ctypes.windll.kernel32
+        user32 = ctypes.windll.user32
+
+        # 64-bit 兼容：设置正确的返回类型和参数类型
+        kernel32.GlobalAlloc.restype = ctypes.c_void_p
+        kernel32.GlobalAlloc.argtypes = [ctypes.c_uint, ctypes.c_size_t]
+        kernel32.GlobalLock.restype = ctypes.c_void_p
+        kernel32.GlobalLock.argtypes = [ctypes.c_void_p]
+        kernel32.GlobalUnlock.argtypes = [ctypes.c_void_p]
+        user32.SetClipboardData.restype = ctypes.c_void_p
+        user32.SetClipboardData.argtypes = [ctypes.c_uint, ctypes.c_void_p]
+
+        # UTF-16LE 编码 + 空终止符
+        data = (text + '\0').encode('utf-16-le')
+
+        # 重试机制：剪贴板可能被其他程序锁定
+        for attempt in range(5):
+            if user32.OpenClipboard(0):
+                break
+            time.sleep(0.05)
+        else:
+            return False
+
+        try:
+            user32.EmptyClipboard()
+
+            # 分配全局内存
+            h_global = kernel32.GlobalAlloc(GMEM_MOVEABLE, len(data))
+            if not h_global:
+                return False
+
+            # 锁定内存并复制数据
+            ptr = kernel32.GlobalLock(h_global)
+            if ptr:
+                ctypes.memmove(ptr, data, len(data))
+                kernel32.GlobalUnlock(h_global)
+
+            # 设置剪贴板数据（所有权转移给系统）
+            user32.SetClipboardData(CF_UNICODETEXT, h_global)
+            return True
+        except Exception as e:
+            print(f"[VoiceLLM] Win32 clipboard error: {e}")
+            return False
+        finally:
+            user32.CloseClipboard()
+
+    def _get_clipboard(self) -> str:
+        """
+        获取当前剪贴板文本（用于粘贴后恢复）。
+        Windows 使用 Win32 API，其他平台使用系统命令。
+        """
+        import platform
+        system = platform.system()
+
+        if system == "Windows":
+            return self._get_clipboard_win32()
+        elif system == "Darwin":
+            import subprocess
+            try:
+                result = subprocess.run(['pbpaste'], capture_output=True, timeout=2)
+                return result.stdout.decode('utf-8', errors='ignore')
+            except Exception:
+                return ""
+        else:
+            import subprocess
+            try:
+                result = subprocess.run(['xclip', '-selection', 'clipboard', '-o'],
+                                        capture_output=True, timeout=2)
+                return result.stdout.decode('utf-8', errors='ignore')
+            except Exception:
+                return ""
+
+    def _get_clipboard_win32(self) -> str:
+        """Windows: 使用 Win32 API 读取剪贴板"""
+        import ctypes
+
+        CF_UNICODETEXT = 13
+
+        kernel32 = ctypes.windll.kernel32
+        user32 = ctypes.windll.user32
+
+        # 64-bit 兼容：设置正确的返回类型和参数类型
+        kernel32.GlobalLock.restype = ctypes.c_void_p
+        kernel32.GlobalLock.argtypes = [ctypes.c_void_p]
+        kernel32.GlobalUnlock.argtypes = [ctypes.c_void_p]
+        user32.GetClipboardData.restype = ctypes.c_void_p
+        user32.GetClipboardData.argtypes = [ctypes.c_uint]
+
+        for attempt in range(5):
+            if user32.OpenClipboard(0):
+                break
+            time.sleep(0.05)
+        else:
+            return ""
+
+        try:
+            handle = user32.GetClipboardData(CF_UNICODETEXT)
+            if not handle:
+                return ""
+
+            ptr = kernel32.GlobalLock(handle)
+            if not ptr:
+                return ""
+
+            try:
+                # 读取 UTF-16LE 字符串
+                raw = ctypes.wstring_at(ptr)
+                return raw
+            finally:
+                kernel32.GlobalUnlock(handle)
+        except Exception:
+            return ""
+        finally:
+            user32.CloseClipboard()
 
     # ------------------------------------------------------------------
     # 快捷命令：常用场景一键调用

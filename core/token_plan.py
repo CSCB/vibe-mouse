@@ -34,6 +34,42 @@ DEFAULT_TOKEN_PLAN = {
     "refine_voice_text": False,
 }
 
+# 可选模型预设（华为云 MaaS，OpenAI 兼容接口）
+# 设置界面会据此生成模型下拉框；model 为 API 调用传入的模型名，
+# endpoint 为对应服务地址。用户也可在下拉框中直接输入自定义模型名。
+MODEL_PRESETS = [
+    {
+        "name": "GLM-4.7 (智谱)",
+        "model": "glm-4.7",
+        "endpoint": "https://maas-api.cn-north-4.myhuaweicloud.com",
+    },
+    {
+        "name": "GLM-4-Plus (智谱)",
+        "model": "glm-4-plus",
+        "endpoint": "https://maas-api.cn-north-4.myhuaweicloud.com",
+    },
+    {
+        "name": "DeepSeek-V3 (深度求索)",
+        "model": "deepseek-v3",
+        "endpoint": "https://maas-api.cn-north-4.myhuaweicloud.com",
+    },
+    {
+        "name": "DeepSeek-R1 (深度求索)",
+        "model": "deepseek-r1",
+        "endpoint": "https://maas-api.cn-north-4.myhuaweicloud.com",
+    },
+    {
+        "name": "Kimi-K2 (月之暗面)",
+        "model": "kimi-k2",
+        "endpoint": "https://maas-api.cn-north-4.myhuaweicloud.com",
+    },
+]
+
+# 图片生成接口（华为云 MaaS 文生图，与文本接口域名不同，仅支持「西南-贵阳一」区域）
+# 参考：https://support.huaweicloud.com/model-call-maas/model-call-023.md
+IMAGE_GEN_ENDPOINT = "https://api.modelarts-maas.com"
+IMAGE_GEN_MODEL = "qwen-image"  # Qwen_Image 文生图模型
+
 
 class TokenPlanClient:
     """
@@ -129,6 +165,67 @@ class TokenPlanClient:
             return f"[TokenPlan] HTTP {e.code}: {err_body}"
         except Exception as e:
             return f"[TokenPlan] 请求失败: {e}"
+
+    def generate_image(self, prompt: str, size: str = "1024x1024",
+                       model: str = IMAGE_GEN_MODEL):
+        """
+        文生图：调用华为云 MaaS 图片生成接口（同步，可能耗时较长，建议在后台线程调用）。
+
+        Args:
+            prompt: 文本提示词（描述要生成的图片）
+            size: 生成尺寸，如 "1024x1024"
+            model: 文生图模型，默认 qwen-image
+
+        Returns:
+            (success: bool, result: bytes 图片数据 或 str 错误信息)
+        """
+        import base64
+
+        if not self.is_enabled():
+            return False, "Token Plan 未启用或未配置 API Key"
+
+        url = f"{IMAGE_GEN_ENDPOINT}/v1/images/generations"
+        payload = {
+            "model": model,
+            "prompt": prompt,
+            "size": size,
+            "response_format": "b64_json",
+        }
+        data = json.dumps(payload).encode("utf-8")
+        req = urllib.request.Request(
+            url,
+            data=data,
+            headers={
+                "Content-Type": "application/json",
+                "Authorization": f"Bearer {self.config.get('api_key', '').strip()}",
+            },
+            method="POST",
+        )
+
+        try:
+            with urllib.request.urlopen(req, timeout=120) as resp:
+                result = json.loads(resp.read().decode("utf-8"))
+        except urllib.error.HTTPError as e:
+            return False, f"HTTP {e.code}: {e.read().decode('utf-8', errors='ignore')}"
+        except Exception as e:
+            return False, f"请求失败: {e}"
+
+        data_list = result.get("data") or []
+        if not data_list:
+            return False, "图片生成返回空结果"
+
+        b64 = data_list[0].get("b64_json") or ""
+        if not b64:
+            return False, "图片生成结果缺少 b64_json"
+
+        # b64_json 可能带 "data:image/jpg;base64," 前缀，去掉后再解码
+        if "," in b64:
+            b64 = b64.split(",", 1)[1]
+
+        try:
+            return True, base64.b64decode(b64)
+        except Exception as e:
+            return False, f"图片解码失败: {e}"
 
     # ------------------------------------------------------------------
     # 预设 Prompt 模板（针对 VibeMouse 场景优化）

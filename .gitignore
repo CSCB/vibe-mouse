@@ -1,0 +1,14 @@
+# 虚拟环境
+.venv/
+venv/
+
+# Python 缓存
+__pycache__/
+*.pyc
+
+# 运行时配置（含敏感信息：API Key / 继电器密码，勿提交）
+config.json
+
+# 日志与错误输出
+*.log
+*.err

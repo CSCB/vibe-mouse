@@ -24,7 +24,8 @@ def build():
         '--name=VibeMouse',
         '--onefile',           # 打包成单文件 / Package as a single file
         '--noconsole',         # 隐藏控制台窗口 / Hide console window
-        '--clean'              # 清理临时文件 / Clean temporary files
+        '--clean',             # 清理临时文件 / Clean temporary files
+        '--add-data=assets;assets' # 将 assets 文件夹打包进去 / Include assets folder
     ]
     
     if system == "Windows":

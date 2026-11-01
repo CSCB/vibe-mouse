@@ -30,7 +30,8 @@
         "mouse_default": {
             "button8": "inline_edit",
             "button9": "skill:code-review",
-            "middle": "accept_diff"
+            "middle": "accept_diff",
+            "button6": "relay:toggle_1"
         },
         "xbox_controller": {
             "a": "accept_diff",
@@ -49,8 +50,25 @@
             "led_enabled": false,
             "vibration_enabled": false,
             "serial_port": null,
-            "serial_baudrate": 9600
+            "serial_baudrate": 9600,
+            "relay": {
+                "channel": 3,
+                "mode": "pulse",
+                "invert": false,
+                "duration_ms": 500,
+                "on_error_duration_ms": 1500
+            }
         }
+    },
+    "ble_relay": {
+        "enabled": true,
+        "auto_connect": true,
+        "last_address": "",
+        "last_name": "",
+        "password": "151811",
+        "channels": 3,
+        "scan_timeout": 5.0,
+        "ui_expanded": false
     },
     "token_plan": {
         "enabled": false,

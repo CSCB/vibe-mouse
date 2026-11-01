@@ -2,8 +2,9 @@ import json
 import os
 import platform
 from enum import Enum
-from .feedback import DEFAULT_FEEDBACK
+from .feedback import DEFAULT_FEEDBACK, RELAY_MODE_PRESETS
 from .token_plan import DEFAULT_TOKEN_PLAN
+from .ble_relay import DEFAULT_BLE_RELAY
 
 class VibeTool(Enum):
     TRAE = "trae"
@@ -84,9 +85,8 @@ DEFAULT_DEVICES = [
 # 默认设备映射：device_id -> {input_id -> action}
 DEFAULT_DEVICE_MAPPINGS = {
     "mouse_default": {
-        "button8": "inline_edit",
-        "button9": "toggle_chat",
-        "middle": "accept_diff",
+        "button8": "voice_input",   # 上侧键（前进）= 语音输入
+        "button9": "submit_chat",   # 下侧键（后退）= 发送/提交
     }
 }
 
@@ -97,7 +97,9 @@ class Config:
         self.shortcuts = {}
         self.devices = []
         self.device_mappings = {}
+        self.keyboard_mappings = {}
         self.feedback = {}
+        self.auto_detect_ide = False
         self.load_config()
 
         # ===== Skill 覆盖层 =====
@@ -139,14 +141,57 @@ class Config:
         else:
             self.device_mappings = DEFAULT_DEVICE_MAPPINGS.copy()
 
-        # 反馈配置
-        self.feedback = data.get("feedback", DEFAULT_FEEDBACK.copy())
+        # 键盘/翻页笔映射（模拟标准键盘的设备，按键名 -> action）
+        self.keyboard_mappings = data.get("keyboard_mappings", {})
+
+        # 反馈配置（合并默认值，保证新增 hardware 子键如 relay 有缺省）
+        feedback = dict(DEFAULT_FEEDBACK)
+        feedback.update(data.get("feedback", {}) or {})
+        # 旧版本把 "relay" 放进时机列表启用硬件反馈；现在 relay 由动作表
+        # 独立控制（trigger 末尾统一触发），迁移时移除避免同一动作表执行两次
+        for timing_key in ("on_received", "on_success", "on_error"):
+            timing_list = feedback.get(timing_key)
+            if isinstance(timing_list, list) and "relay" in timing_list:
+                feedback[timing_key] = [x for x in timing_list if x != "relay"]
+        hardware = dict(DEFAULT_FEEDBACK.get("hardware", {}))
+        hardware.update(feedback.get("hardware", {}) or {})
+        # relay 动作表逐事件深合并（保证缺省通道格子有默认动作；
+        # 旧版 channel/invert 等字段不再使用，直接忽略；mode 为面板选中的预设名）
+        relay_defaults = dict(DEFAULT_FEEDBACK.get("hardware", {}).get("relay", {}))
+        user_relay = dict(hardware.get("relay", {}) or {})
+        relay_merged = {
+            "mode": user_relay.get("mode", relay_defaults.get("mode", "lights_3")),
+            "pulse_ms": user_relay.get("pulse_ms", relay_defaults.get("pulse_ms", 500)),
+            "submit_pulse_ms": user_relay.get("submit_pulse_ms", relay_defaults.get("submit_pulse_ms", 1000)),
+            "error_pulse_ms": user_relay.get("error_pulse_ms", relay_defaults.get("error_pulse_ms", 1500)),
+            "drop_gap_ms": user_relay.get("drop_gap_ms", relay_defaults.get("drop_gap_ms", 2000)),
+        }
+        for event_key in ("on_submit", "on_done", "on_error"):
+            # mode 匹配已知预设时，动作表整表以预设为准（下拉是唯一事实来源，
+            # 旧版本/手工改过的过期表自动丢弃）；未知 mode 才走缺省合并
+            preset = RELAY_MODE_PRESETS.get(relay_merged["mode"])
+            if preset:
+                relay_merged[event_key] = dict(preset[event_key])
+            else:
+                table = dict(relay_defaults.get(event_key, {}))
+                table.update(user_relay.get(event_key, {}) or {})
+                relay_merged[event_key] = table
+        hardware["relay"] = relay_merged
+        feedback["hardware"] = hardware
+        self.feedback = feedback
 
         # Token Plan 配置（华为云大模型接入）
         self.token_plan = data.get("token_plan", DEFAULT_TOKEN_PLAN.copy())
 
         # Skill 配置（技能系统）
         self.skills = data.get("skills", {"enabled": True, "fallback_action": "inline_edit", "inline_skills": []})
+
+        # 自动检测与语音配置
+        self.auto_detect_ide = data.get("auto_detect_ide", False)
+
+        # BLE 继电器配置（合并默认值，保证新增字段有缺省）
+        self.ble_relay = dict(DEFAULT_BLE_RELAY)
+        self.ble_relay.update(data.get("ble_relay", {}) or {})
 
         # 如果配置文件不存在或刚迁移，保存一次
         if not os.path.exists(self.config_file) or "mouse_mapping" in data:
@@ -158,9 +203,12 @@ class Config:
             "shortcuts": self.shortcuts,
             "devices": self.devices,
             "device_mappings": self.device_mappings,
+            "keyboard_mappings": self.keyboard_mappings,
             "feedback": self.feedback,
             "token_plan": self.token_plan,
             "skills": self.skills,
+            "auto_detect_ide": self.auto_detect_ide,
+            "ble_relay": self.ble_relay,
         }
         with open(self.config_file, "w", encoding="utf-8") as f:
             json.dump(data, f, indent=4, ensure_ascii=False)

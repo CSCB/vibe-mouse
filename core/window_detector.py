@@ -23,6 +23,9 @@ class DetectionMethod(Enum):
 
 # AI 工具窗口特征库
 # 每个工具定义窗口标题关键词和进程名关键词
+# 注意：匹配按字典顺序首个命中即返回，特有工具必须排在泛化工具之前
+# （CodeArts/DevEco 等均为 VS Code/Electron 系衍生，进程名常含 "code"，
+#   若排在 copilot 之前失败会被误判为 copilot）
 TOOL_WINDOW_SIGNATURES = {
     "trae": {
         "titles": ["Trae", "Trae IDE"],
@@ -39,11 +42,6 @@ TOOL_WINDOW_SIGNATURES = {
         "processes": ["Windsurf", "Windsurf.exe", "windsurf"],
         "description": "Windsurf IDE"
     },
-    "copilot": {
-        "titles": ["Visual Studio Code", "VS Code", "Code - ", "Code:"],
-        "processes": ["Code", "Code.exe", "code", "Visual Studio Code"],
-        "description": "VS Code + Copilot"
-    },
     "deveco_studio": {
         "titles": ["DevEco Studio", "DevEco"],
         "processes": ["devecostudio", "devecostudio.exe", "DevEcoStudio"],
@@ -55,9 +53,15 @@ TOOL_WINDOW_SIGNATURES = {
         "description": "DevEco Code"
     },
     "codearts": {
-        "titles": ["CodeArts", "CodeArts IDE"],
-        "processes": ["CodeArts", "CodeArts.exe", "codearts"],
-        "description": "CodeArts IDE"
+        "titles": ["CodeArts", "CodeArts IDE", "CodeArts Agent"],
+        "processes": ["CodeArts", "CodeArts.exe", "codearts", "codearts-agent"],
+        "description": "CodeArts IDE / CodeArts Agent"
+    },
+    # 泛化的 VS Code 特征放最后兜底
+    "copilot": {
+        "titles": ["Visual Studio Code", "VS Code", "Code - ", "Code:"],
+        "processes": ["Code", "Code.exe", "code", "Visual Studio Code"],
+        "description": "VS Code + Copilot"
     }
 }
 
