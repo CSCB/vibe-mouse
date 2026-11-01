@@ -42,6 +42,12 @@ Applicable to individual development, laboratory projects, smart device retrofit
 - **Tool Switch History**: Every tool switch saves a full state snapshot (active Skill, shortcut overrides, feedback config). Switch back and your previous context is restored instantly.
 - **GUI Client Mode**: Run `python core/main.py --gui` for a desktop panel showing current tool, active Skill, switch history, and auto-detection toggle.
 - **Visual Config Tool**: Open `config-tool.html` in a browser to configure tools, devices, mappings, feedback, Token Plan, and Skills visually — no backend required.
+- **Core Control Center (Settings Panel)**: A dark-themed PyQt5 dialog with three tabs — Vibe Coding Input / Output-Feedback / Third-Party. Configure IDE binding, mouse & gamepad mappings, feedback types, desktop mascot, LLM bridge, and BLE relay in one place.
+- **Natural-Language Configuration**: Describe a setting in plain language (e.g. "set the mouse upper side button to voice input") and the LLM parses it into a config update automatically.
+- **Floating Mascot "Niu Lai" (Desktop Pet)**: A frameless, always-on-top pixel mascot with idle/working/done/action animations. Drag to move, double-click to open settings, tray menu to switch tools. Its idle image can be uploaded or generated via LLM text-to-image.
+- **Local Offline Speech Recognition**: Built-in FunASR (SenseVoiceSmall) worker for on-device speech recognition — no cloud required; the recognition result can optionally go through the LLM bridge.
+- **BLE Relay (Multi-Color Light)**: Bluetooth relay control (authentication / rename / change PIN / per-channel on/off/toggle), used as a third-party multi-color light feedback device.
+- **LLM Text-to-Image & Multiple Model Presets**: Generate a custom mascot image via Huawei Cloud MaaS image generation (`qwen-image`); switch between GLM / DeepSeek / Kimi presets with editable model name and endpoint.
 
 ### Core Architecture
 
@@ -59,7 +65,12 @@ Device Event → Adapter → Event (unified) → DeviceManager → Executor (key
 | `core/skill_engine.py` | Skill parsing and matching engine — trigger words → system_prompt injection |
 | `core/window_detector.py` | Cross-platform foreground window detection — auto-identifies AI IDE |
 | `core/tool_switcher.py` | Tool switch history with full state snapshots (Skill, shortcuts, feedback) |
-| `core/gui_client.py` | Desktop GUI panel (tkinter) — status, history, auto-detect toggle |
+| `core/settings_ui.py` | Core Control Center (PyQt5) — three-tab settings + natural-language config + text-to-image |
+| `core/panel_ui.py` | Control panel — device mapping overview & relay real-time control |
+| `core/pet_ui.py` | Floating desktop mascot "Niu Lai" — idle/working/done animations + tray menu |
+| `core/ble_relay.py` / `core/ble_relay_ui.py` | BLE relay (multi-color light) — auth / rename / PIN / channels |
+| `core/funasr_worker.py` | Local offline speech recognition worker (FunASR SenseVoiceSmall) |
+| `core/completion_detector.py` | AI generation completion detection (IO heuristic) |
 | `core/device_manager.py` | Manages all adapters and routes events to the executor |
 | `core/event.py` | Unified event abstraction layer (`DeviceType`, `InputType`, `Event`) |
 | `core/adapters/base.py` | Abstract base class for all adapters |
@@ -71,7 +82,6 @@ Device Event → Adapter → Event (unified) → DeviceManager → Executor (key
 | `core/adapters/hid_adapter.py` | Generic HID — Stream Deck, scanner (hidapi / pywinusb) |
 | `core/adapters/network_adapter.py` | IoT — MQTT / WebSocket / HTTP |
 | `core/adapters/voice_adapter.py` | Voice — wake words & voice commands |
-| `core/system_tray.py` | System tray menu |
 | `core/main.py` | Entry point |
 
 ### Full Project Structure
@@ -130,11 +140,10 @@ vibe-mouse/
 
 | Button | Action |
 |---|---|
-| Middle button | Accept AI code (Accept Diff) |
-| Side button 1 (button8) | Invoke inline code generation (Inline Edit) |
-| Side button 2 (button9) | Toggle AI chat panel (Toggle Chat) |
+| Side button 1 (button8, upper/forward) | Voice input (Voice Input) |
+| Side button 2 (button9, lower/back) | Submit / send chat (Submit Chat) |
 
-*Customize in `config-tool.html` or `config.json`.*
+*Customize in `config-tool.html` or `config.json` (or via natural-language configuration in the settings panel).*
 
 ### Supported Tools
 
@@ -357,19 +366,18 @@ In the GUI panel, check "Enable window focus auto-detection". VibeMouse will pol
 
 Detection is based on window title keywords and process name matching. Supported tools: Trae, Cursor, Windsurf, VS Code (Copilot), DevEco Studio, DevEco Code, CodeArts.
 
-### GUI Client Mode
+### GUI Modes
 
 ```bash
-python core/main.py --gui
+python -m core.main            # desktop mascot (default)
+python -m core.main --gui      # desktop mascot + control panel
 ```
 
-The GUI panel shows:
-- **Current Tool**: The active AI IDE (auto-detected or manually selected)
-- **Current Skill**: The active Skill mode and its version
-- **Auto-Detection Toggle**: Enable/disable window focus monitoring
-- **Tool Buttons**: Manually switch to any tool
-- **Quick Actions**: Quick switch back, refresh detection, open config, exit Skill
-- **Switch History**: Recent tool switches with timestamps and Skill info
+On Windows you can also use the single startup script `start.bat` / `start.bat --gui`.
+
+- **Desktop Mascot "Niu Lai"**: A frameless, always-on-top pixel mascot. Drag to move, double-click to open the Core Control Center, right-click the tray icon to switch tools or exit.
+- **Core Control Center (Settings Panel)**: Three tabs — Vibe Coding Input / Output-Feedback / Third-Party — plus a natural-language config bar at the top. Configure IDE binding, mouse/gamepad mappings, feedback, mascot (with LLM text-to-image), LLM bridge, and BLE relay.
+- **Control Panel**: Device mapping overview and BLE relay real-time control (scan / connect / channel switches).
 
 ### Usage
 
@@ -378,12 +386,14 @@ The GUI panel shows:
    pip install -r requirements.txt
    ```
 2. (Optional) Install adapter-specific dependencies as needed (pygame, bleak, pyserial, etc.)
-3. Configure via `config-tool.html` or `config.json`
-4. Start:
+3. Configure via `config-tool.html`, `config.json`, or the Core Control Center (double-click the mascot).
+4. Start (Windows):
    ```bash
-   python core/main.py
+   start.bat            # desktop mascot (default)
+   start.bat --gui      # desktop mascot + control panel
    ```
-   A blue "V" icon appears in the system tray. Right-click to switch tools or exit.
+   Or directly: `python -m core.main` / `python -m core.main --gui`.
+   The "Niu Lai" mascot appears as a floating always-on-top window; right-click the tray icon to switch tools or exit, double-click the mascot to open settings.
 
 ### Package as Executable
 
@@ -451,6 +461,12 @@ Contributors are welcome to co-build China's first open-source robot actuator ec
 - **工具切换历史记录**: 每次切换工具自动保存完整状态快照（激活的 Skill、快捷键覆盖、反馈配置）。切回工具时自动恢复之前的上下文。
 - **GUI 客户端模式**: 运行 `python core/main.py --gui` 启动桌面面板，显示当前工具、激活的 Skill、切换历史和自动检测开关。
 - **可视化配置工具**: 用浏览器打开 `config-tool.html`，图形化配置工具、外设、映射、反馈、Token Plan 和 Skills，无需后端。
+- **核心控制中枢（设置面板）**: 暗色主题 PyQt5 对话框，三大标签页 —— Vibe Coding 输入 / 输出反馈 / 三方伙伴。一站式配置 IDE 绑定、鼠标/手柄映射、反馈类型、桌宠、大模型桥接和 BLE 继电器。
+- **自然语言配置**: 用一句话描述配置（如「把鼠标上侧键设为语音输入」），大模型自动解析并更新配置。
+- **悬浮桌宠「牛来」**: 无边框、置顶的像素桌宠，含待机/工作/完成/动作动画。可拖拽移动，双击打开设置，托盘菜单切换工具。待机形象可上传或通过大模型文生图生成。
+- **本地离线语音识别**: 内置 FunASR（SenseVoiceSmall）worker，语音识别无需联网；识别结果可选经过大模型桥接。
+- **BLE 继电器（多色灯光）**: 蓝牙继电器控制（鉴权 / 改名 / 改密 / 分通道开关），作为三方伙伴的多色灯光反馈设备。
+- **大模型文生图 & 多模型预设**: 通过华为云 MaaS 图片生成（`qwen-image`）生成自定义桌宠形象；GLM / DeepSeek / Kimi 多模型预设，模型名和 endpoint 可编辑。
 
 ### 核心架构
 
@@ -468,7 +484,12 @@ Contributors are welcome to co-build China's first open-source robot actuator ec
 | `core/skill_engine.py` | Skill 解析与匹配引擎 — 触发词 → system_prompt 注入 |
 | `core/window_detector.py` | 跨平台前台窗口检测器 — 自动识别当前 AI IDE |
 | `core/tool_switcher.py` | 工具切换历史记录 — 完整状态快照（Skill、快捷键、反馈） |
-| `core/gui_client.py` | 桌面 GUI 面板（tkinter）— 状态、历史、自动检测开关 |
+| `core/settings_ui.py` | 核心控制中枢（PyQt5）— 三大标签设置 + 自然语言配置 + 文生图 |
+| `core/panel_ui.py` | 控制面板 — 设备映射速查 & 继电器实时控制 |
+| `core/pet_ui.py` | 悬浮桌宠「牛来」— 待机/工作/完成动画 + 托盘菜单 |
+| `core/ble_relay.py` / `core/ble_relay_ui.py` | BLE 继电器（多色灯光）— 鉴权 / 改名 / 改密 / 通道控制 |
+| `core/funasr_worker.py` | 本地离线语音识别 worker（FunASR SenseVoiceSmall） |
+| `core/completion_detector.py` | AI 生成完成检测（IO 判定） |
 | `core/device_manager.py` | 管理所有适配器，将事件路由到执行器 |
 | `core/event.py` | 统一事件抽象层 (`DeviceType`, `InputType`, `Event`) |
 | `core/adapters/base.py` | 适配器抽象基类 |
@@ -480,7 +501,6 @@ Contributors are welcome to co-build China's first open-source robot actuator ec
 | `core/adapters/hid_adapter.py` | 通用 HID — Stream Deck、扫描枪 (hidapi / pywinusb) |
 | `core/adapters/network_adapter.py` | IoT — MQTT / WebSocket / HTTP |
 | `core/adapters/voice_adapter.py` | 语音 — 唤醒词 & 语音命令 |
-| `core/system_tray.py` | 系统托盘菜单 |
 | `core/main.py` | 入口 |
 
 ### 完整项目结构
@@ -539,11 +559,10 @@ vibe-mouse/
 
 | 按键 | 动作 |
 |---|---|
-| 中键 | 接受 AI 代码 (Accept Diff) |
-| 侧键 1 (button8) | 唤起内联代码生成 (Inline Edit) |
-| 侧键 2 (button9) | 唤起 AI 聊天面板 (Toggle Chat) |
+| 侧键 1 (button8，上/前进键) | 语音输入 (Voice Input) |
+| 侧键 2 (button9，下/后退键) | 发送/提交聊天 (Submit Chat) |
 
-*可在 `config-tool.html` 或 `config.json` 中自定义。*
+*可在 `config-tool.html` 或 `config.json` 中自定义（或在设置面板用自然语言配置）。*
 
 ### 支持工具
 
@@ -785,19 +804,18 @@ python core/main.py --gui
 
 检测基于窗口标题关键词和进程名匹配。支持工具：Trae、Cursor、Windsurf、VS Code（Copilot）、DevEco Studio、DevEco Code、CodeArts。
 
-### GUI 客户端模式
+### GUI 模式
 
 ```bash
-python core/main.py --gui
+python -m core.main            # 桌宠模式（默认）
+python -m core.main --gui      # 桌宠 + 控制面板
 ```
 
-GUI 面板显示：
-- **当前工具**: 当前激活的 AI IDE（自动检测或手动选择）
-- **当前 Skill**: 当前激活的 Skill 模式及版本
-- **自动检测开关**: 启用/禁用窗口焦点监控
-- **工具按钮**: 手动切换到任意工具
-- **快捷操作**: 快速回切、刷新检测、打开配置、退出 Skill
-- **切换历史**: 最近工具切换记录，含时间戳和 Skill 信息
+Windows 下也可用唯一启动脚本 `start.bat` / `start.bat --gui`。
+
+- **悬浮桌宠「牛来」**: 无边框、置顶的像素桌宠。拖拽移动，双击打开核心控制中枢，右键托盘图标切换工具或退出。
+- **核心控制中枢（设置面板）**: 三大标签页 —— Vibe Coding 输入 / 输出反馈 / 三方伙伴，顶部含自然语言配置栏。配置 IDE 绑定、鼠标/手柄映射、反馈、桌宠（含大模型文生图）、大模型桥接和 BLE 继电器。
+- **控制面板**: 设备映射速查和 BLE 继电器实时控制（扫描 / 连接 / 通道开关）。
 
 ### 使用方法
 
@@ -806,18 +824,14 @@ GUI 面板显示：
    pip install -r requirements.txt
    ```
 2. （可选）按需安装适配器依赖（pygame、bleak、pyserial 等）
-3. 通过 `config-tool.html` 或 `config.json` 配置
-4. 启动（托盘模式/默认）:
+3. 通过 `config-tool.html`、`config.json` 或核心控制中枢（双击桌宠打开）配置
+4. 启动（Windows）:
    ```bash
-   python core/main.py
+   start.bat            # 桌宠模式（默认）
+   start.bat --gui      # 桌宠 + 控制面板
    ```
-   系统托盘出现蓝色 "V" 图标，右键切换工具或退出。
-
-   或启动 GUI 客户端模式:
-   ```bash
-   python core/main.py --gui
-   ```
-   打开桌面面板，支持自动检测、切换历史和 Skill 管理。
+   或直接：`python -m core.main` / `python -m core.main --gui`。
+   「牛来」桌宠会以悬浮置顶窗口出现；右键托盘图标切换工具或退出，双击桌宠打开设置。
 
 ### 打包成可执行文件
 
