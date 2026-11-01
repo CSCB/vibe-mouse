@@ -442,6 +442,18 @@ Scan the QR code to add the assistant on WeChat, and you will be invited to the 
 
 ![Add assistant to join](docs/images/assistant.jpg)
 
+## Join Us
+
+Many hardware developers have already joined us, but plenty of hardware APIs are still waiting to be integrated. Meanwhile, AI Agents are evolving fast — many of the AI IDEs we adapted just four months ago can no longer keep up.
+
+We sincerely invite you to join our open-source community and contribute code. As incentives, we will:
+
+- Organize a series of open-source competitions;
+- Help you prototype and design hardware enclosures;
+- Sell your works through our channels.
+
+This is our way of rewarding every contributor's passion and effort.
+
 ## Star / Fork / Pull Request Welcome
 Contributors are welcome to co-build China's first open-source robot actuator ecosystem and the innovative Vibecoding intelligent interaction framework. All contributed code is automatically released under AGPL-3.0.
 
@@ -897,6 +909,18 @@ python build.py
 **AGPL-3.0** — 所有衍生作品必须保持开源。云端部署须向用户提供源代码。禁止闭源商业使用。
 
 ---
+
+## 加入我们
+
+目前已有大量硬件开发者加入我们，但许多硬件的 API 尚未同步进来；与此同时，AI Agent 的发展日新月异，我们四个月前适配的 AI IDE，很多已经跟不上节奏了。
+
+诚邀大家加入我们的开源行列，多多提交代码。作为激励，我们将：
+
+- 创办一系列开源比赛；
+- 帮助大家打样、制作外观；
+- 把大家的作品放到我们的渠道销售。
+
+以此回馈每一位贡献者的热情与付出。
 
 ## 欢迎 Star / Fork / Pull Request
 欢迎开发者共同建设中国首个开源机器人执行器生态和创新的 Vibecoding 智能交互框架。所有贡献的代码将自动在 AGPL-3.0 许可下发布。
