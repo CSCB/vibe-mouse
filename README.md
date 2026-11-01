@@ -49,6 +49,24 @@ Applicable to individual development, laboratory projects, smart device retrofit
 - **BLE Relay (Multi-Color Light)**: Bluetooth relay control (authentication / rename / change PIN / per-channel on/off/toggle), used as a third-party multi-color light feedback device.
 - **LLM Text-to-Image & Multiple Model Presets**: Generate a custom mascot image via Huawei Cloud MaaS image generation (`qwen-image`); switch between GLM / DeepSeek / Kimi presets with editable model name and endpoint.
 
+### Screenshots & Demos
+
+#### Core Control Center (Three Tabs)
+
+| Vibe Coding Input | Output / Feedback | Third-Party |
+|---|---|---|
+| ![Vibe Coding Input](docs/images/settings-input.png) | ![Output / Feedback](docs/images/settings-feedback.png) | ![Third-Party](docs/images/settings-partner.png) |
+
+#### Desktop Mascot "Niu Lai" (States)
+
+| Idle | Working | Done | Action | Accept |
+|---|---|---|---|---|
+| ![Idle](assets/idle.gif) | ![Working](assets/working.gif) | ![Done](assets/done.gif) | ![Action](assets/action.gif) | ![Accept](assets/accept.gif) |
+
+#### Third-Party Devices
+
+![Third-Party Devices](docs/images/third-party-devices.png)
+
 ### Core Architecture
 
 ```
@@ -418,6 +436,12 @@ Find `VibeMouse.exe` (Windows) or `VibeMouse.app` (Mac) in `dist/`.
 
 ---
 
+## Join Community
+
+Scan the QR code to add the assistant on WeChat, and you will be invited to the group:
+
+![Add assistant to join](docs/images/assistant.jpg)
+
 ## Star / Fork / Pull Request Welcome
 Contributors are welcome to co-build China's first open-source robot actuator ecosystem and the innovative Vibecoding intelligent interaction framework. All contributed code is automatically released under AGPL-3.0.
 
@@ -467,6 +491,24 @@ Contributors are welcome to co-build China's first open-source robot actuator ec
 - **本地离线语音识别**: 内置 FunASR（SenseVoiceSmall）worker，语音识别无需联网；识别结果可选经过大模型桥接。
 - **BLE 继电器（多色灯光）**: 蓝牙继电器控制（鉴权 / 改名 / 改密 / 分通道开关），作为三方伙伴的多色灯光反馈设备。
 - **大模型文生图 & 多模型预设**: 通过华为云 MaaS 图片生成（`qwen-image`）生成自定义桌宠形象；GLM / DeepSeek / Kimi 多模型预设，模型名和 endpoint 可编辑。
+
+### 截图与演示
+
+#### 核心控制中枢（三大标签）
+
+| Vibe Coding 输入 | 输出反馈 | 三方伙伴 |
+|---|---|---|
+| ![Vibe Coding 输入](docs/images/settings-input.png) | ![输出反馈](docs/images/settings-feedback.png) | ![三方伙伴](docs/images/settings-partner.png) |
+
+#### 悬浮桌宠「牛来」（各状态）
+
+| 待机 | 工作中 | 完成 | 动作 | 接受 |
+|---|---|---|---|---|
+| ![待机](assets/idle.gif) | ![工作中](assets/working.gif) | ![完成](assets/done.gif) | ![动作](assets/action.gif) | ![接受](assets/accept.gif) |
+
+#### 第三方产品
+
+![第三方产品](docs/images/third-party-devices.png)
 
 ### 核心架构
 
@@ -858,3 +900,9 @@ python build.py
 
 ## 欢迎 Star / Fork / Pull Request
 欢迎开发者共同建设中国首个开源机器人执行器生态和创新的 Vibecoding 智能交互框架。所有贡献的代码将自动在 AGPL-3.0 许可下发布。
+
+## 加入交流群
+
+扫码添加小助手微信，拉你入群：
+
+![加小助手入群](docs/images/assistant.jpg)
