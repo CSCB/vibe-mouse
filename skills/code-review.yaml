@@ -1,0 +1,31 @@
+name: code-review
+version: "1.0"
+description: "代码审查模式 — 激活后打开聊天面板，LED 变蓝，语音用审查 prompt"
+triggers:
+  words: ["审查", "review", "检查代码", "优化", "refactor"]
+  priority: 10
+system_prompt: |
+  你是一个资深代码审查专家。请审查用户提供的代码，指出：
+  1. 潜在Bug
+  2. 性能瓶颈
+  3. 安全风险
+  4. 代码规范问题
+  给出具体的修改建议。
+actions:
+  - type: execute_action
+    value: toggle_chat
+  - type: set_mode
+    value: chat
+feedback:
+  on_received: ["sound", "led"]
+  on_success: ["overlay"]
+  on_error: ["sound", "notification", "led"]
+  hardware:
+    led_enabled: true
+devices:
+  - id: voice_mic
+    enabled: true
+metadata:
+  author: "vibemouse"
+  tags: ["code", "review"]
+enabled: true
