@@ -705,7 +705,7 @@ class SettingsDialog(QDialog):
         hw_group.setLayout(hw_form)
         layout.addWidget(hw_group)
 
-        # 桌宠联动（悬浮牛来动画）
+        # 桌宠联动（威币猫动画）
         mascot_group = QGroupBox("桌宠联动 / Mascot")
         mascot_form = QFormLayout()
         mascot_cfg = self.config.feedback.get("mascot", {}) or {}
@@ -928,7 +928,7 @@ class SettingsDialog(QDialog):
         dev_row = QHBoxLayout()
         dev_row.setSpacing(8)
         dev_items = [
-            ("🐂", "悬浮牛来", "配合语音（桌宠 + 语音提示）"),
+            ("🐂", "悬浮牛来", "磁悬浮装置，AI IDE 执行完毕自动坠落"),
             ("💨", "小佩吹风机", "吹风反馈（第三方设备）"),
         ]
         for icon, name, desc in dev_items:

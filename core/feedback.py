@@ -96,7 +96,7 @@ DEFAULT_FEEDBACK = {
     "on_received": ["sound", "overlay"],
     "on_success": ["sound"],
     "on_error": ["sound", "notification", "overlay"],
-    # 桌宠联动（悬浮牛来动画）：工作/完成/动作/录音/Skill 状态动画开关
+    # 桌宠联动（威币猫动画）：工作/完成/动作/录音/Skill 状态动画开关
     "mascot": {
         "enabled": True,
     },

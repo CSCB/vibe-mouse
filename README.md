@@ -44,7 +44,7 @@ Applicable to individual development, laboratory projects, smart device retrofit
 - **Visual Config Tool**: Open `config-tool.html` in a browser to configure tools, devices, mappings, feedback, Token Plan, and Skills visually — no backend required.
 - **Core Control Center (Settings Panel)**: A dark-themed PyQt5 dialog with three tabs — Vibe Coding Input / Output-Feedback / Third-Party. Configure IDE binding, mouse & gamepad mappings, feedback types, desktop mascot, LLM bridge, and BLE relay in one place.
 - **Natural-Language Configuration**: Describe a setting in plain language (e.g. "set the mouse upper side button to voice input") and the LLM parses it into a config update automatically.
-- **Floating Mascot "Niu Lai" (Desktop Pet)**: A frameless, always-on-top pixel mascot with idle/working/done/action animations. Drag to move, double-click to open settings, tray menu to switch tools. Its idle image can be uploaded or generated via LLM text-to-image.
+- **Floating Mascot "Vibe Cat" (Desktop Pet)**: A frameless, always-on-top pixel mascot with idle/working/done/action animations. Drag to move, double-click to open settings, tray menu to switch tools. Its idle image can be uploaded or generated via LLM text-to-image.
 - **Local Offline Speech Recognition**: Built-in FunASR (SenseVoiceSmall) worker for on-device speech recognition — no cloud required; the recognition result can optionally go through the LLM bridge.
 - **BLE Relay (Multi-Color Light)**: Bluetooth relay control (authentication / rename / change PIN / per-channel on/off/toggle), used as a third-party multi-color light feedback device.
 - **LLM Text-to-Image & Multiple Model Presets**: Generate a custom mascot image via Huawei Cloud MaaS image generation (`qwen-image`); switch between GLM / DeepSeek / Kimi presets with editable model name and endpoint.
@@ -57,7 +57,7 @@ Applicable to individual development, laboratory projects, smart device retrofit
 |---|---|---|
 | ![Vibe Coding Input](docs/images/settings-input.png) | ![Output / Feedback](docs/images/settings-feedback.png) | ![Third-Party](docs/images/settings-partner.png) |
 
-#### Desktop Mascot "Niu Lai" (States)
+#### Desktop Mascot "Vibe Cat" (States)
 
 | Idle | Working | Done | Action | Accept |
 |---|---|---|---|---|
@@ -85,7 +85,7 @@ Device Event → Adapter → Event (unified) → DeviceManager → Executor (key
 | `core/tool_switcher.py` | Tool switch history with full state snapshots (Skill, shortcuts, feedback) |
 | `core/settings_ui.py` | Core Control Center (PyQt5) — three-tab settings + natural-language config + text-to-image |
 | `core/panel_ui.py` | Control panel — device mapping overview & relay real-time control |
-| `core/pet_ui.py` | Floating desktop mascot "Niu Lai" — idle/working/done animations + tray menu |
+| `core/pet_ui.py` | Floating desktop mascot "Vibe Cat" — idle/working/done animations + tray menu |
 | `core/ble_relay.py` / `core/ble_relay_ui.py` | BLE relay (multi-color light) — auth / rename / PIN / channels |
 | `core/funasr_worker.py` | Local offline speech recognition worker (FunASR SenseVoiceSmall) |
 | `core/completion_detector.py` | AI generation completion detection (IO heuristic) |
@@ -393,7 +393,7 @@ python -m core.main --gui      # desktop mascot + control panel
 
 On Windows you can also use the single startup script `start.bat` / `start.bat --gui`.
 
-- **Desktop Mascot "Niu Lai"**: A frameless, always-on-top pixel mascot. Drag to move, double-click to open the Core Control Center, right-click the tray icon to switch tools or exit.
+- **Desktop Mascot "Vibe Cat"**: A frameless, always-on-top pixel mascot. Drag to move, double-click to open the Core Control Center, right-click the tray icon to switch tools or exit.
 - **Core Control Center (Settings Panel)**: Three tabs — Vibe Coding Input / Output-Feedback / Third-Party — plus a natural-language config bar at the top. Configure IDE binding, mouse/gamepad mappings, feedback, mascot (with LLM text-to-image), LLM bridge, and BLE relay.
 - **Control Panel**: Device mapping overview and BLE relay real-time control (scan / connect / channel switches).
 
@@ -411,7 +411,7 @@ On Windows you can also use the single startup script `start.bat` / `start.bat -
    start.bat --gui      # desktop mascot + control panel
    ```
    Or directly: `python -m core.main` / `python -m core.main --gui`.
-   The "Niu Lai" mascot appears as a floating always-on-top window; right-click the tray icon to switch tools or exit, double-click the mascot to open settings.
+   The "Vibe Cat" mascot appears as a floating always-on-top window; right-click the tray icon to switch tools or exit, double-click the mascot to open settings.
 
 ### Package as Executable
 
@@ -487,7 +487,7 @@ Contributors are welcome to co-build China's first open-source robot actuator ec
 - **可视化配置工具**: 用浏览器打开 `config-tool.html`，图形化配置工具、外设、映射、反馈、Token Plan 和 Skills，无需后端。
 - **核心控制中枢（设置面板）**: 暗色主题 PyQt5 对话框，三大标签页 —— Vibe Coding 输入 / 输出反馈 / 三方伙伴。一站式配置 IDE 绑定、鼠标/手柄映射、反馈类型、桌宠、大模型桥接和 BLE 继电器。
 - **自然语言配置**: 用一句话描述配置（如「把鼠标上侧键设为语音输入」），大模型自动解析并更新配置。
-- **悬浮桌宠「牛来」**: 无边框、置顶的像素桌宠，含待机/工作/完成/动作动画。可拖拽移动，双击打开设置，托盘菜单切换工具。待机形象可上传或通过大模型文生图生成。
+- **悬浮桌宠「威币猫」**: 无边框、置顶的像素桌宠，含待机/工作/完成/动作动画。可拖拽移动，双击打开设置，托盘菜单切换工具。待机形象可上传或通过大模型文生图生成。
 - **本地离线语音识别**: 内置 FunASR（SenseVoiceSmall）worker，语音识别无需联网；识别结果可选经过大模型桥接。
 - **BLE 继电器（多色灯光）**: 蓝牙继电器控制（鉴权 / 改名 / 改密 / 分通道开关），作为三方伙伴的多色灯光反馈设备。
 - **大模型文生图 & 多模型预设**: 通过华为云 MaaS 图片生成（`qwen-image`）生成自定义桌宠形象；GLM / DeepSeek / Kimi 多模型预设，模型名和 endpoint 可编辑。
@@ -500,7 +500,7 @@ Contributors are welcome to co-build China's first open-source robot actuator ec
 |---|---|---|
 | ![Vibe Coding 输入](docs/images/settings-input.png) | ![输出反馈](docs/images/settings-feedback.png) | ![三方伙伴](docs/images/settings-partner.png) |
 
-#### 悬浮桌宠「牛来」（各状态）
+#### 悬浮桌宠「威币猫」（各状态）
 
 | 待机 | 工作中 | 完成 | 动作 | 接受 |
 |---|---|---|---|---|
@@ -528,7 +528,7 @@ Contributors are welcome to co-build China's first open-source robot actuator ec
 | `core/tool_switcher.py` | 工具切换历史记录 — 完整状态快照（Skill、快捷键、反馈） |
 | `core/settings_ui.py` | 核心控制中枢（PyQt5）— 三大标签设置 + 自然语言配置 + 文生图 |
 | `core/panel_ui.py` | 控制面板 — 设备映射速查 & 继电器实时控制 |
-| `core/pet_ui.py` | 悬浮桌宠「牛来」— 待机/工作/完成动画 + 托盘菜单 |
+| `core/pet_ui.py` | 悬浮桌宠「威币猫」— 待机/工作/完成动画 + 托盘菜单 |
 | `core/ble_relay.py` / `core/ble_relay_ui.py` | BLE 继电器（多色灯光）— 鉴权 / 改名 / 改密 / 通道控制 |
 | `core/funasr_worker.py` | 本地离线语音识别 worker（FunASR SenseVoiceSmall） |
 | `core/completion_detector.py` | AI 生成完成检测（IO 判定） |
@@ -855,7 +855,7 @@ python -m core.main --gui      # 桌宠 + 控制面板
 
 Windows 下也可用唯一启动脚本 `start.bat` / `start.bat --gui`。
 
-- **悬浮桌宠「牛来」**: 无边框、置顶的像素桌宠。拖拽移动，双击打开核心控制中枢，右键托盘图标切换工具或退出。
+- **悬浮桌宠「威币猫」**: 无边框、置顶的像素桌宠。拖拽移动，双击打开核心控制中枢，右键托盘图标切换工具或退出。
 - **核心控制中枢（设置面板）**: 三大标签页 —— Vibe Coding 输入 / 输出反馈 / 三方伙伴，顶部含自然语言配置栏。配置 IDE 绑定、鼠标/手柄映射、反馈、桌宠（含大模型文生图）、大模型桥接和 BLE 继电器。
 - **控制面板**: 设备映射速查和 BLE 继电器实时控制（扫描 / 连接 / 通道开关）。
 
@@ -873,7 +873,7 @@ Windows 下也可用唯一启动脚本 `start.bat` / `start.bat --gui`。
    start.bat --gui      # 桌宠 + 控制面板
    ```
    或直接：`python -m core.main` / `python -m core.main --gui`。
-   「牛来」桌宠会以悬浮置顶窗口出现；右键托盘图标切换工具或退出，双击桌宠打开设置。
+   「威币猫」桌宠会以悬浮置顶窗口出现；右键托盘图标切换工具或退出，双击桌宠打开设置。
 
 ### 打包成可执行文件
 
