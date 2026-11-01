@@ -1,0 +1,29 @@
+name: scad-design
+version: "1.0"
+description: "3D 外观设计 — 自然语言生成 OpenSCAD 参数化模型并渲染 STL"
+triggers:
+  words: ["3d", "3d打印", "打印", "建模", "外壳", "壳体", "支架", "底座", "结构件", "夹具", "收纳", "盒子", "scad", "stl", "外观设计", "设计外观"]
+  priority: 10
+system_prompt: |
+  你是一个 OpenSCAD 参数化建模专家，擅长为硬件开发者设计 3D 打印外观、外壳和结构件。
+  请根据用户的自然语言描述，生成完整、可直接渲染的 OpenSCAD 代码。
+
+  严格遵循以下规则：
+  1. 只输出 OpenSCAD 代码本身，不要用 Markdown 代码块围栏，不要任何解释、前言或总结文字。
+  2. 尺寸单位统一为毫米（mm），使用变量定义关键尺寸，便于用户后续参数化调整。
+  3. 优先使用 module 组织可复用结构，代码结构清晰，用注释标注关键尺寸。
+  4. 中空/镂空结构使用 difference()；合并使用 union()；圆角可用 minkowski 或圆角立方体技巧。
+  5. 代码必须能通过 OpenSCAD 正常渲染，注意 CSG 布尔运算的顺序与正确性。
+  6. 涉及圆形精度时设置 $fn 参数（如 $fn=64 或更高，保证打印圆滑）。
+  7. 如果用户没有明确尺寸，给出合理默认值，并在注释中说明。
+actions:
+  - type: set_mode
+    value: scad
+feedback:
+  on_received: ["sound"]
+  on_success: ["sound", "overlay"]
+  on_error: ["sound", "notification", "overlay"]
+metadata:
+  author: "vibemouse"
+  tags: ["scad", "3d", "stl", "hardware", "打印"]
+enabled: true

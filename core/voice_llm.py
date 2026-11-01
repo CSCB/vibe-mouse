@@ -244,6 +244,10 @@ class VoiceLLMBridge:
             if self._on_response:
                 self._on_response(clean_text)
 
+        elif mode == "scad":
+            # 模式D：OpenSCAD 3D 模型生成（保存 .scad → 渲染 .stl）
+            self._handle_scad_response(clean_text)
+
         else:  # mode == "auto"
             # 自动模式：有代码内容则粘贴，有动作标记则执行动作
             if action and self.executor:
@@ -254,6 +258,44 @@ class VoiceLLMBridge:
                 self._type_text(clean_text)
                 if self._on_response:
                     self._on_response(clean_text)
+
+    def _handle_scad_response(self, scad_code: str):
+        """
+        处理 OpenSCAD 3D 模型生成：保存 .scad → 调用 OpenSCAD 渲染 .stl。
+
+        用于「scad-design」Skill（mode=scad）：模型回复为纯 OpenSCAD 代码，
+        不粘贴到 IDE，而是落盘渲染为 STL 文件供 3D 打印。
+        """
+        import os
+        from .feedback import FeedbackTiming
+        from .scad_generator import ScadGenerator
+
+        print("[VoiceLLM] SCAD 模式：生成 3D 模型...")
+
+        gen = ScadGenerator()
+        success, result = gen.generate(scad_code)
+
+        if success:
+            basename = os.path.basename(result)
+            print(f"[VoiceLLM] STL 已生成: {result}")
+            if self.executor:
+                self.executor.feedback.trigger(
+                    FeedbackTiming.ON_SUCCESS,
+                    "scad_design",
+                    f"3D 模型已生成：{basename}（output 目录）",
+                )
+            if self._on_response:
+                self._on_response(result)
+        else:
+            print(f"[VoiceLLM] SCAD 生成失败: {result}")
+            if self.executor:
+                self.executor.feedback.trigger(
+                    FeedbackTiming.ON_ERROR,
+                    "scad_design",
+                    f"3D 模型生成失败：{result}",
+                )
+            if self._on_error:
+                self._on_error(result)
 
     def _extract_action(self, text: str) -> str:
         """从回复中提取动作标记，如 [ACTION:inline_edit] / [ACTION:relay:on_1]"""

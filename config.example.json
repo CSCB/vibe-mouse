@@ -85,7 +85,8 @@
         "skill_files": [
             "skills/quick-code.yaml",
             "skills/code-review.yaml",
-            "skills/presentation.yaml"
+            "skills/presentation.yaml",
+            "skills/scad-design.yaml"
         ],
         "inline_skills": [
             {

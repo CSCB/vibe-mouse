@@ -6,6 +6,7 @@
 pynput==1.7.6            # 鼠标 / 键盘监听与控制
 PyQt5>=5.15              # 桌面 UI（桌宠 / 设置面板 / 控制面板 / 反馈浮窗 / 系统托盘）
 Pillow>=10.0             # 桌宠素材生成
+pyyaml>=6.0              # Skill 定义文件（YAML）解析
 
 # ---- 语音识别 / Speech Recognition ----
 funasr>=1.0              # FunASR（SenseVoiceSmall 本地离线识别）

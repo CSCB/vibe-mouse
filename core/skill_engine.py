@@ -154,6 +154,22 @@ class SkillEngine:
         for filepath in skill_files:
             self.load_skill_file(filepath)
 
+        # 3. 自动扫描项目 skills/ 目录（内置 Skill，开箱即用）
+        self._load_skills_dir()
+
+    def _load_skills_dir(self):
+        """自动加载项目 skills/ 目录下的 YAML/JSON Skill 文件"""
+        try:
+            project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+            skills_dir = os.path.join(project_root, "skills")
+            if not os.path.isdir(skills_dir):
+                return
+            for fn in sorted(os.listdir(skills_dir)):
+                if fn.endswith((".yaml", ".yml", ".json")):
+                    self.load_skill_file(os.path.join(skills_dir, fn))
+        except Exception as e:
+            print(f"[SkillEngine] 扫描 skills/ 目录失败: {e}")
+
     def _build_skill(self, data: dict, source: str = "inline") -> Skill:
         """从 dict 构建 Skill 对象"""
         return Skill(
